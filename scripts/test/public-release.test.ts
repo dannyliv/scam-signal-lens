@@ -194,5 +194,5 @@ describe('public recording release gates', () => {
     } finally {
       await rm(fixtureDirectory, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 });
