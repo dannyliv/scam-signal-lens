@@ -16,10 +16,19 @@ Author and source-dataset labels are not model input. They are used only for the
 
 Each corpus was verified independently by loading every generated replay, rechecking record and projection hashes, rerunning browser-safe replay verification, and recomputing the evaluation. The positive class is `strong_warning_signs` under `policy-v1`.
 
-| Corpus | Rows | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy | False-positive rate | Evidence coverage |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| AI Email 200 | 200 | 92 | 0 | 100 | 8 | 100.00% | 92.00% | 95.83% | 96.00% | 0.00% | 436 of 782 eligible signals, 55.75% |
-| SpaPhish v5 public projection | 499 | 43 | 3 | 247 | 206 | 93.48% | 17.27% | 29.15% | 58.12% | 1.20% | 460 of 1,357 eligible signals, 33.90% |
+| Corpus | Rows | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy | Specificity | False-positive rate | Evidence coverage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| AI Email 200 | 200 | 92 | 0 | 100 | 8 | 100.00% | 92.00% | 95.83% | 96.00% | 100.00% | 0.00% | 436 of 782 eligible signals, 55.75% |
+| SpaPhish v5 public projection | 499 | 43 | 3 | 247 | 206 | 93.48% | 17.27% | 29.15% | 58.12% | 98.80% | 1.20% | 460 of 1,357 eligible signals, 33.90% |
+
+Recorded concern by source label. Alert is `strong_warning_signs`. Verify first is `verify_first`. Few warning signs is `few_warning_signs`. Abstain is `not_enough_evidence`.
+
+| Corpus | Source label | Alert | Verify first | Few warning signs | Abstain | Unavailable |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| AI Email 200 | Phishing | 92 | 8 | 0 | 0 | 0 |
+| AI Email 200 | Benign | 0 | 40 | 60 | 0 | 0 |
+| SpaPhish v5 public projection | Phishing | 43 | 183 | 23 | 0 | 0 |
+| SpaPhish v5 public projection | Benign | 3 | 119 | 128 | 0 | 0 |
 
 Both public evaluations have complete analysis, decision, and accepted-capture coverage for their published rows: 200 of 200 for AI Email and 499 of 499 for SpaPhish. The results must not be pooled. The English corpus is authored and synthetic, while the Spanish corpus is source-derived and has different language and label provenance.
 

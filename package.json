@@ -13,7 +13,6 @@
     "build:recorder": "pnpm build:core && tsc -p tools/capture/tsconfig.json",
     "evaluate": "tsx scripts/evaluate-recording.ts",
     "build:public-data": "tsx scripts/build-public-data.ts",
-    "recording:publish": "tsx scripts/build-public-data.ts",
     "recording:verify": "pnpm build:core && tsx scripts/release-verify-public-recordings.ts",
     "build:web": "pnpm build:core && pnpm --filter @scam-signal-lens/web build",
     "build:demo": "pnpm recording:verify && pnpm build",

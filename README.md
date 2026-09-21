@@ -2,22 +2,31 @@
 
 Scam Signal Lens is a static replay interface for inspecting recorded scam-signal analyses of two email benchmark corpora. It is a teaching and evaluation tool. It does not authenticate senders, inspect destinations, determine whether a message is safe, or provide live analysis.
 
-The public source is [dannyliv/scam-signal-lens](https://github.com/dannyliv/scam-signal-lens), and the recorded replay is deployed at [dannyliv.github.io/scam-signal-lens](https://dannyliv.github.io/scam-signal-lens/). The V1 deployment uses public commit `16bda35284dc311b9fca48d17c264d241a38aac3`; tag `v1.0.0` resolves to that commit.
+The public source is [dannyliv/scam-signal-lens](https://github.com/dannyliv/scam-signal-lens), and the recorded replay is deployed at [dannyliv.github.io/scam-signal-lens](https://dannyliv.github.io/scam-signal-lens/). Tag `v1.0.0` resolves to application commit `16bda35284dc311b9fca48d17c264d241a38aac3`. Pages deploys `main`; the live source immediately before this closeout was `c033886b6741b97f108017ead8a520b4078321d3`.
 
 ## Local verified evaluation
 
 The fixed `policy-v1` concern policy is evaluated separately for each corpus. These are recorded replay results, not live provider calls or a claim that a signal probability is a phishing probability.
 
-| Corpus | Rows | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy | False-positive rate | Evidence coverage |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| AI Email 200 | 200 | 92 | 0 | 100 | 8 | 100.00% | 92.00% | 95.83% | 96.00% | 0.00% | 436 of 782 eligible signals, 55.75% |
-| SpaPhish v5 public projection | 499 | 43 | 3 | 247 | 206 | 93.48% | 17.27% | 29.15% | 58.12% | 1.20% | 460 of 1,357 eligible signals, 33.90% |
+| Corpus | Rows | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy | Specificity | False-positive rate | Evidence coverage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| AI Email 200 | 200 | 92 | 0 | 100 | 8 | 100.00% | 92.00% | 95.83% | 96.00% | 100.00% | 0.00% | 436 of 782 eligible signals, 55.75% |
+| SpaPhish v5 public projection | 499 | 43 | 3 | 247 | 206 | 93.48% | 17.27% | 29.15% | 58.12% | 98.80% | 1.20% | 460 of 1,357 eligible signals, 33.90% |
+
+Recorded concern counts by source label. Alert is `strong_warning_signs`. These counts are separate from the confusion matrix above.
+
+| Corpus | Source label | Alert | Verify first | Few warning signs | Abstain | Unavailable |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| AI Email 200 | Phishing | 92 | 8 | 0 | 0 | 0 |
+| AI Email 200 | Benign | 0 | 40 | 60 | 0 | 0 |
+| SpaPhish v5 public projection | Phishing | 43 | 183 | 23 | 0 | 0 |
+| SpaPhish v5 public projection | Benign | 3 | 119 | 128 | 0 | 0 |
 
 The SpaPhish result is a user-authorized public 499-row projection of a source 500-row capture. `SPAPHISH-088` had an accepted Pass A but no accepted Pass B after the bounded diagnostic budget, so it is excluded only from the public projection. The source-run totals remain source-scoped. See the [dataset documentation](docs/DATASETS.md), [model card](docs/MODEL_CARD.md), and [release report](docs/RELEASE_REPORT.md).
 
 ## Recorded replay evidence
 
-The release evidence includes [AI Email desktop](docs/media/ai200-desk-1440x1000.png), [tablet](docs/media/ai200-desk-1024x768.png), and [mobile](docs/media/ai200-desk-390x844.png) views, [SpaPhish desktop](docs/media/spaphish499-desk-1440x1000.png), and recorded replays for [AI Email](docs/media/ai200-recorded-replay-1440.webm) and [SpaPhish](docs/media/spaphish499-recorded-replay-1440.webm). The deployed root and SpaPhish hash route returned HTTP 200 during release verification.
+The release evidence includes desktop, tablet, and mobile views for both corpora, including a completed warning case and a completed hard-negative case in each view. The [release report](docs/RELEASE_REPORT.md) lists those screenshots. Recorded replays: [AI Email](docs/media/ai200-recorded-replay-1440.webm) and [SpaPhish](docs/media/spaphish499-recorded-replay-1440.webm). The deployed root and SpaPhish hash route returned HTTP 200 during release verification.
 
 ## Key-free local verification
 
