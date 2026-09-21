@@ -1,15 +1,26 @@
 # Release report
 
-This report records the V1 public release. Source repository: [dannyliv/scam-signal-lens](https://github.com/dannyliv/scam-signal-lens). Pages deployment: [dannyliv.github.io/scam-signal-lens](https://dannyliv.github.io/scam-signal-lens/). Public deployment commit: `16bda35284dc311b9fca48d17c264d241a38aac3`, also resolved by tag `v1.0.0`. The [CI workflow](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552766198) and [Pages workflow](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552863086) succeeded for that deployment.
+This report records the V1 public release. Source repository: [dannyliv/scam-signal-lens](https://github.com/dannyliv/scam-signal-lens). Pages deployment: [dannyliv.github.io/scam-signal-lens](https://dannyliv.github.io/scam-signal-lens/).
+
+Tag `v1.0.0` is application commit `16bda35284dc311b9fca48d17c264d241a38aac3`. The [CI workflow](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552766198) succeeded for that commit, and the [Pages workflow](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552863086) deployed it. Documentation commit `c033886b6741b97f108017ead8a520b4078321d3` then became the live Pages source through [CI](https://github.com/dannyliv/scam-signal-lens/actions/runs/35553206616) and [Pages](https://github.com/dannyliv/scam-signal-lens/actions/runs/35553206611). That documentation revision does not change the recorded benchmark. The tag stays on the application commit. Pages deploys later `main` commits, including this closeout, through the same workflow.
 
 ## Verified recorded replay evaluations
 
 The public-artifact verifier loaded the actual dataset index, each corpus, every generated replay, and both generated runs. It recomputed corpus hashes, replay and projection hashes, replay-derived policy output, accepted-stage anchors, evaluation rows, and evaluation summaries. The fixed policy version is `policy-v1`.
 
-| Corpus | Published rows | Confusion matrix | Precision | Recall | F1 | Accuracy | False-positive rate | Evidence coverage |
-| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| AI Email 200 | 200 | 92 TP, 0 FP, 100 TN, 8 FN | 100.00% | 92.00% | 95.83% | 96.00% | 0.00% | 436 of 782, 55.75% |
-| SpaPhish v5 public projection | 499 | 43 TP, 3 FP, 247 TN, 206 FN | 93.48% | 17.27% | 29.15% | 58.12% | 1.20% | 460 of 1,357, 33.90% |
+| Corpus | Published rows | Confusion matrix | Precision | Recall | F1 | Accuracy | Specificity | False-positive rate | Evidence coverage |
+| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| AI Email 200 | 200 | 92 TP, 0 FP, 100 TN, 8 FN | 100.00% | 92.00% | 95.83% | 96.00% | 100.00% | 0.00% | 436 of 782, 55.75% |
+| SpaPhish v5 public projection | 499 | 43 TP, 3 FP, 247 TN, 206 FN | 93.48% | 17.27% | 29.15% | 58.12% | 98.80% | 1.20% | 460 of 1,357, 33.90% |
+
+Specificity is `TN / (TN + FP)` among decided benign rows: 100/100 for AI Email and 247/250 for SpaPhish. Recorded concern by source label, from the same verified evaluations:
+
+| Corpus | Source label | Alert | Verify first | Few warning signs | Abstain | Unavailable |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| AI Email 200 | Phishing | 92 | 8 | 0 | 0 | 0 |
+| AI Email 200 | Benign | 0 | 40 | 60 | 0 | 0 |
+| SpaPhish v5 public projection | Phishing | 43 | 183 | 23 | 0 | 0 |
+| SpaPhish v5 public projection | Benign | 3 | 119 | 128 | 0 | 0 |
 
 Both published evaluations have complete analysis, decision, and accepted-capture coverage. The corpora are evaluated independently and must not be pooled.
 
@@ -41,10 +52,30 @@ Two smoke runs, with four smoke HTTP attempts, and eight diagnostic calls are ex
 | Action pins, browser boundary, and static artifact checks | Passed locally. |
 | Clean public release gate | Passed in clean public staging with the pinned scanner, including working-tree, index, history, and distribution secret scans. The static artifact contained 707 files. |
 | Browser replay QA | Local QA covered verified dynamic loaders, accepted Pass A and B anchors, queue controls, keyboard tabs, reduced motion, 200% page scale, Spanish hash reload, filters, Compare, Learn, inert URLs, no external resources, and no console errors. Deployed-site verification confirmed the AI Email and SpaPhish hash routes, no console errors or external application resources, and inert message URLs. |
-| Retained screenshots | [AI Email desktop](media/ai200-desk-1440x1000.png), [tablet](media/ai200-desk-1024x768.png), and [mobile](media/ai200-desk-390x844.png); [SpaPhish desktop](media/spaphish499-desk-1440x1000.png). |
+| Retained screenshots | Desk, warning, and hard-negative views at desktop, tablet, and mobile for both corpora. See the screenshot table below. |
 | Recorded replay videos | [AI Email replay](media/ai200-recorded-replay-1440.webm) and [SpaPhish replay](media/spaphish499-recorded-replay-1440.webm). |
 | CSP, network, and tamper checks | Passed locally and on the deployed site. The deployed root and SpaPhish hash route returned HTTP 200. The browser inspection found no external application resources, and tamper coverage rejects a forged serialized verification flag plus derived and request tampering. |
 | Production gzip measurements | Initial HTML, CSS, and entry JavaScript total 85,028 gzip bytes as a sum of built files. Entry JavaScript is 81.81 kB gzip. The AI and SpaPhish loader chunks are 57.48 kB and 142.41 kB gzip, respectively; corpus and individual replay chunks are lazy. The complete static artifact totals 3,561,572 gzip bytes as a sum of built files. These are file-gzip measurements, not network-transfer measurements. |
-| Public deployment metadata | Commit `16bda35284dc311b9fca48d17c264d241a38aac3`, tag `v1.0.0`, [CI](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552766198), [Pages](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552863086), and [Pages URL](https://dannyliv.github.io/scam-signal-lens/). |
+| Public deployment metadata | Tag `v1.0.0` at `16bda35284dc311b9fca48d17c264d241a38aac3`, with [CI](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552766198) and the superseded [Pages deployment](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552863086). Live Pages source immediately before this closeout: `c033886b6741b97f108017ead8a520b4078321d3`, [Pages](https://github.com/dannyliv/scam-signal-lens/actions/runs/35553206611), [Pages URL](https://dannyliv.github.io/scam-signal-lens/). |
 
-The capture source revisions and hashes above are private-recording provenance. They are distinct from the public deployment commit and tag.
+The capture source revisions and hashes above are private-recording provenance. They are distinct from the public deployment commits and tag.
+
+## Screenshot evidence
+
+These shots are from the built static replay. No new provider capture was run. Warning cases are recorded `strong_warning_signs` on a phishing source label. Hard-negative cases are recorded `few_warning_signs` on a benign source label, matching the existing AI Email desktop hard-negative. Mobile warning and hard-negative shots use the Signals panel, which is the analysis view at that width. Desk shots leave playback unstarted.
+
+| View | AI Email 200 | SpaPhish v5 public projection |
+| --- | --- | --- |
+| Desk desktop | [1440×1000](media/ai200-desk-1440x1000.png) | [1440×1000](media/spaphish499-desk-1440x1000.png) |
+| Desk tablet | [1024×768](media/ai200-desk-1024x768.png) | [1024×768](media/spaphish499-desk-1024x768.png) |
+| Desk mobile | [390×844](media/ai200-desk-390x844.png) | [390×844](media/spaphish499-desk-390x844.png) |
+| Warning, `AIP001` / `SPAPHISH-015` | [desktop](media/ai200-warning-complete-1440x1000.png), [tablet](media/ai200-warning-complete-1024x768.png), [mobile](media/ai200-warning-complete-390x844.png) | [desktop](media/spaphish499-warning-complete-1440x1000.png), [tablet](media/spaphish499-warning-complete-1024x768.png), [mobile](media/spaphish499-warning-complete-390x844.png) |
+| Hard negative, `AIB001` / `SPAPHISH-008` | [desktop](media/ai200-hard-negative-complete-1440x1000.png), [tablet](media/ai200-hard-negative-complete-1024x768.png), [mobile](media/ai200-hard-negative-complete-390x844.png) | [desktop](media/spaphish499-hard-negative-complete-1440x1000.png), [tablet](media/spaphish499-hard-negative-complete-1024x768.png), [mobile](media/spaphish499-hard-negative-complete-390x844.png) |
+
+## V1 closeout
+
+The screenshot gap is closed in the table above. There is no screenshot waiver.
+
+Private workspace package versions remain `0.1.0`. They are not the public release identifier. The public identifier remains git tag `v1.0.0`.
+
+`recording:publish` duplicated `build:public-data` and had no callers, so the alias is removed. `scripts/release-check-public-recordings.mjs` duplicated a narrower file-layout check and had no callers, so it is removed. The release gate remains `pnpm check:public-recordings`.

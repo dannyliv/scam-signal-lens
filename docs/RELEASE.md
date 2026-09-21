@@ -2,7 +2,9 @@
 
 ## Status
 
-This document defines release gates. Local recorded-artifact and benchmark evidence is recorded in [the release report](RELEASE_REPORT.md). A deployment URL, workflow result, browser evidence, and final public-staging secret-scan result are still pending.
+This document defines release gates. V1 execution of those gates is recorded in [the release report](RELEASE_REPORT.md). The public Pages URL, workflow results, browser evidence, screenshots, and clean public-staging secret scan for that release are recorded there.
+
+Tag `v1.0.0` identifies application commit `16bda35284dc311b9fca48d17c264d241a38aac3`. GitHub Pages deploys the tip of `main`. The live source immediately before this closeout was documentation commit `c033886b6741b97f108017ead8a520b4078321d3`, which superseded the tagged-commit deployment. The tag was not moved.
 
 ## Required gates
 
