@@ -1,0 +1,57 @@
+# Scam Signal Lens
+
+Scam Signal Lens is a static replay interface for inspecting recorded scam-signal analyses of two email benchmark corpora. It is a teaching and evaluation tool. It does not authenticate senders, inspect destinations, determine whether a message is safe, or provide live analysis.
+
+The recorded replay artifacts are locally verified. A public repository, Pages URL, and deployment verification do not exist yet.
+
+## Local verified evaluation
+
+The fixed `policy-v1` concern policy is evaluated separately for each corpus. These are recorded replay results, not live provider calls or a claim that a signal probability is a phishing probability.
+
+| Corpus | Rows | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy | False-positive rate | Evidence coverage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| AI Email 200 | 200 | 92 | 0 | 100 | 8 | 100.00% | 92.00% | 95.83% | 96.00% | 0.00% | 436 of 782 eligible signals, 55.75% |
+| SpaPhish v5 public projection | 499 | 43 | 3 | 247 | 206 | 93.48% | 17.27% | 29.15% | 58.12% | 1.20% | 460 of 1,357 eligible signals, 33.90% |
+
+The SpaPhish result is a user-authorized public 499-row projection of a source 500-row capture. `SPAPHISH-088` had an accepted Pass A but no accepted Pass B after the bounded diagnostic budget, so it is excluded only from the public projection. The source-run totals remain source-scoped. See the [dataset documentation](docs/DATASETS.md), [model card](docs/MODEL_CARD.md), and [release report](docs/RELEASE_REPORT.md).
+
+## Recorded replay evidence
+
+The local browser evidence includes [AI Email desktop](docs/media/ai200-desk-1440x1000.png), [tablet](docs/media/ai200-desk-1024x768.png), and [mobile](docs/media/ai200-desk-390x844.png) views, [SpaPhish desktop](docs/media/spaphish499-desk-1440x1000.png), and recorded replays for [AI Email](docs/media/ai200-recorded-replay-1440.webm) and [SpaPhish](docs/media/spaphish499-recorded-replay-1440.webm). Deployment evidence remains pending.
+
+## Key-free local verification
+
+The normal web build uses only committed public inputs and recordings. It must run without a provider key.
+
+```sh
+corepack enable
+pnpm install --frozen-lockfile
+pnpm test
+pnpm typecheck
+pnpm recording:verify
+pnpm build
+pnpm check:action-pins
+pnpm check:boundaries
+pnpm check:artifact
+```
+
+The build output is `apps/web/dist`. The release workflow uploads that directory only.
+
+## Scope
+
+The primary benchmark corpora are kept separate:
+
+- `ai-email-200-v1`: 200 original English emails, with 100 dataset-author benign labels and 100 dataset-author phishing labels.
+- `spaphish-v5`: 499 Spanish emails from a frozen 500-row selection, with 250 upstream benign labels and 249 upstream phishing labels after one documented post-capture evidence exclusion.
+
+Dataset labels are annotations, not findings by the application. The synthetic set is constructed, and neither corpus establishes real-world prevalence, sender identity, safety, calibration, or detection performance. See [dataset documentation](docs/DATASETS.md) and the [scope addendum](docs/SCOPE-ADDENDUM.md).
+
+## Boundaries
+
+The browser receives only bundled, reviewed public data and replays a matching recorded result when one is available. It has no key entry field, provider client, or live inference path. The recorder is Node-only and lives outside the web dependency graph. It accepts `TYPESAFE_API_KEY` only for a private capture process and writes its private output outside this repository before reviewed public records are promoted.
+
+See [setup](docs/SETUP.md), [recording](docs/RECORDING.md), [evaluation](docs/EVALUATION.md), [security](docs/SECURITY.md), [deployment](docs/DEPLOYMENT.md), [privacy](docs/PRIVACY.md), [release process](docs/RELEASE.md), and [third-party notices](docs/THIRD_PARTY_NOTICES.md).
+
+## License
+
+The [MIT license](LICENSE) covers original project code only. It does not relicense the SpaPhish material, provider outputs, trademarks, or third-party documentation. See [third-party notices](docs/THIRD_PARTY_NOTICES.md).

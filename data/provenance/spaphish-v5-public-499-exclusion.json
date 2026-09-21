@@ -1,0 +1,24 @@
+{
+  "datasetId": "spaphish-v5",
+  "excluded": [
+    {
+      "disposition": "excluded_from_public_projection_after_capture",
+      "evidencePassStatus": "failed",
+      "exampleId": "SPAPHISH-088",
+      "inputSha256": "b8f6bf952cb3056c609ee65827bb42c4c9cf592c0febab8ca85cdec5e93afa7a",
+      "label": "phishing",
+      "plannedPassBRequestSha256": "30f3a83c978468a92a79449b357cac5c9200999bbf5d2597e18f6b10dedf6d20",
+      "sourceRecordId": "2667aeef9b485dfba77422c20ab1fab7b1d2f5c40ba07572ad2ad77f8c3933bc"
+    }
+  ],
+  "excludedExampleIds": [
+    "SPAPHISH-088"
+  ],
+  "kind": "authorized_post_capture_exclusion",
+  "publishedCorpusSha256": "6ad2512824f99d1f926fecb2d41d7b76f9308c31258767b823d142a48c9e6c1b",
+  "reason": "Pass B ended with HTTP 400 after the authorized diagnostic request budget; cause unresolved, excluded after capture by explicit publication authorization",
+  "sourceCorpusSha256": "d190e6c672ea5c2c0fa298d9595a058d05e84380305b2242c87b8f8e6b1f2421",
+  "sourceDatasetId": "spaphish-v5",
+  "sourceExpectedCount": 500,
+  "version": "1.0.0"
+}

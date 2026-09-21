@@ -1,0 +1,31 @@
+{
+  "datasetId": "spaphish-v5",
+  "upstream": {
+    "title": "SpaPhish: A Spanish Dataset for Phishing and Psychological Pattern Detection",
+    "release": 5,
+    "doi": "10.17632/hz2d6gz7pc.5",
+    "landingPage": "https://data.mendeley.com/datasets/hz2d6gz7pc/5",
+    "retrievalDate": "2026-09-20",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "creators": "Lazaro Bustio-Martinez and listed contributors"
+  },
+  "files": [
+    {
+      "name": "Spaphish dataset - DiB.csv",
+      "downloadUrl": "https://data.mendeley.com/public-files/datasets/hz2d6gz7pc/files/f796c8e2-3768-4c2d-8b73-48f0d7771de5/file_downloaded",
+      "sha256": "656b2245d58da72d640680e5c2a168673a130b38607f2a427c773bbb167e995e"
+    },
+    {
+      "name": "dataset_schema.json",
+      "downloadUrl": "https://data.mendeley.com/public-files/datasets/hz2d6gz7pc/files/eb378c47-8c13-44d2-afef-328cb1a03a43/file_downloaded",
+      "sha256": "51d501037e05f2dd117f8d46c4131d08971fa1f21b220bcc401670741605cdba"
+    },
+    {
+      "name": "README.txt",
+      "downloadUrl": "https://data.mendeley.com/public-files/datasets/hz2d6gz7pc/files/6c446cb1-0094-43dd-85cc-09b9860f2d5e/file_downloaded",
+      "sha256": "ce44b6c86de0873f8b5d8baf4aaeb1a1710916e81966b97bbc549cfd294ab7ca"
+    }
+  ],
+  "retrieval": "Run node scripts/download-spaphish-source.mjs. The script verifies every file against this manifest before writing it."
+}

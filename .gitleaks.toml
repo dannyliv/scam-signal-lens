@@ -1,0 +1,11 @@
+title = "Scam Signal Lens secret scan"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "typesafe-or-jev-runtime-credential"
+description = "TypeSafe or Jev credential assignment"
+regex = '''(?i)(?:typesafe|jev)[-_]?(?:api)?[-_]?key\s*[:=]\s*["']?([A-Za-z0-9._~+/-]{8,})'''
+secretGroup = 1
+entropy = 2.0

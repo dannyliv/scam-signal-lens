@@ -1,0 +1,37 @@
+{
+  "name": "scam-signal-lens",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.17.1",
+  "scripts": {
+    "test:core": "vitest run packages/core/test",
+    "test": "pnpm build:core && pnpm test:core && pnpm test:ui && pnpm test:release",
+    "test:ui": "vitest run apps/web/test",
+    "test:release": "vitest run scripts/test",
+    "typecheck": "pnpm build:core && tsc --noEmit",
+    "build:core": "tsc -p packages/core/tsconfig.json",
+    "build:recorder": "pnpm build:core && tsc -p tools/capture/tsconfig.json",
+    "evaluate": "tsx scripts/evaluate-recording.ts",
+    "build:public-data": "tsx scripts/build-public-data.ts",
+    "recording:publish": "tsx scripts/build-public-data.ts",
+    "recording:verify": "pnpm build:core && tsx scripts/release-verify-public-recordings.ts",
+    "build:web": "pnpm build:core && pnpm --filter @scam-signal-lens/web build",
+    "build:demo": "pnpm recording:verify && pnpm build",
+    "build": "pnpm build:web",
+    "check:action-pins": "node scripts/release-check-action-pins.mjs",
+    "check:boundaries": "node scripts/release-check-boundaries.mjs",
+    "check:artifact": "node scripts/release-check-artifact.mjs",
+    "check:public-recordings": "pnpm recording:verify",
+    "check:release": "pnpm check:action-pins && env -u TYPESAFE_API_KEY pnpm check:boundaries && node scripts/release-check-key-free-build.mjs && env -u TYPESAFE_API_KEY pnpm check:public-recordings && env -u TYPESAFE_API_KEY pnpm test && env -u TYPESAFE_API_KEY pnpm typecheck && env -u TYPESAFE_API_KEY pnpm build && pnpm check:artifact && pnpm check:secrets",
+    "check:secrets": "node scripts/release-secret-scan.mjs"
+  },
+  "dependencies": {
+    "@scam-signal-lens/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.5.2",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  }
+}

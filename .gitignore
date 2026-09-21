@@ -1,0 +1,38 @@
+# Machine-local coordination and task state
+HANDOFF.md
+GOAL.md
+STATE.md
+TODO.md
+DECISIONS.md
+
+# Credentials and private capture state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.private/
+private-output/
+.capture-tmp/
+.capture-cache/
+capture-staging/
+*.log
+
+# Raw source downloads and transport material
+data/raw/
+data/private/
+data/sources/raw/
+data/sources/spaphish-v5/*.csv
+data/provenance/private/
+raw-http/
+
+# Dependencies and generated build/test output
+node_modules/
+**/dist/
+coverage/
+playwright-report/
+test-results/
+release-artifacts/
+*.tsbuildinfo
+.DS_Store

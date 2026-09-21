@@ -1,0 +1,9 @@
+{
+  "name": "@scam-signal-lens/capture",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@scam-signal-lens/core": "workspace:*"
+  }
+}

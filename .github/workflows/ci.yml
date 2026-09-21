@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24.18.0
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify pinned actions
+        run: pnpm check:action-pins
+      - name: Verify browser boundary
+        run: env -u TYPESAFE_API_KEY pnpm check:boundaries
+      - name: Verify credential-bearing builds are refused
+        run: node scripts/release-check-key-free-build.mjs
+      - name: Verify committed public replay artifacts
+        run: env -u TYPESAFE_API_KEY pnpm check:public-recordings
+      - name: Run key-free tests and type checks
+        run: |
+          env -u TYPESAFE_API_KEY pnpm test
+          env -u TYPESAFE_API_KEY pnpm typecheck
+      - name: Build the static replay
+        run: env -u TYPESAFE_API_KEY pnpm build
+      - name: Inspect the deployment artifact
+        run: pnpm check:artifact

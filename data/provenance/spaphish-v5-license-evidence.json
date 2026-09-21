@@ -1,0 +1,9 @@
+{
+  "source": "https://data.mendeley.com/datasets/hz2d6gz7pc/5",
+  "retrievalDate": "2026-09-20",
+  "datasetRelease": 5,
+  "doi": "10.17632/hz2d6gz7pc.5",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "sourceStatement": "The upstream landing page identifies SpaPhish release 5 as CC BY 4.0 and describes a 1,395 row Spanish email dataset with labels 0 legitimate and 1 phishing."
+}

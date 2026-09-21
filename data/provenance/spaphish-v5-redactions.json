@@ -1,0 +1,17 @@
+{
+  "datasetId": "spaphish-v5",
+  "purpose": "public credential-like token redaction ledger",
+  "redactions": [
+    {
+      "exampleId": "SPAPHISH-397",
+      "field": "input.body",
+      "newInputSha256": "a97b8c345ea10e4e1721bf5b40af3a81c7e11c9d3e8d548a62d2e505fbc3baa2",
+      "parameterName": "token",
+      "previousInputSha256": "9cb900c752150f7465c928e59d792ffed54641717fd3b093025f1a0a5d6127ad",
+      "reason": "credential-like password-reset token in preserved upstream message text",
+      "replacement": "[REDACTED_PASSWORD_RESET_TOKEN]",
+      "sourceRecordId": "cd1fee0cac571659996cfa1d54d459a699fd3a67a1f9d67857751a792c25bab2"
+    }
+  ],
+  "version": "1.0.0"
+}
