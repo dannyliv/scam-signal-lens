@@ -2,7 +2,7 @@
 
 Scam Signal Lens is a static replay interface for inspecting recorded scam-signal analyses of two email benchmark corpora. It is a teaching and evaluation tool. It does not authenticate senders, inspect destinations, determine whether a message is safe, or provide live analysis.
 
-The recorded replay artifacts are locally verified. A public repository, Pages URL, and deployment verification do not exist yet.
+The public source is [dannyliv/scam-signal-lens](https://github.com/dannyliv/scam-signal-lens), and the recorded replay is deployed at [dannyliv.github.io/scam-signal-lens](https://dannyliv.github.io/scam-signal-lens/). The V1 deployment uses public commit `16bda35284dc311b9fca48d17c264d241a38aac3`; tag `v1.0.0` resolves to that commit.
 
 ## Local verified evaluation
 
@@ -17,7 +17,7 @@ The SpaPhish result is a user-authorized public 499-row projection of a source 5
 
 ## Recorded replay evidence
 
-The local browser evidence includes [AI Email desktop](docs/media/ai200-desk-1440x1000.png), [tablet](docs/media/ai200-desk-1024x768.png), and [mobile](docs/media/ai200-desk-390x844.png) views, [SpaPhish desktop](docs/media/spaphish499-desk-1440x1000.png), and recorded replays for [AI Email](docs/media/ai200-recorded-replay-1440.webm) and [SpaPhish](docs/media/spaphish499-recorded-replay-1440.webm). Deployment evidence remains pending.
+The release evidence includes [AI Email desktop](docs/media/ai200-desk-1440x1000.png), [tablet](docs/media/ai200-desk-1024x768.png), and [mobile](docs/media/ai200-desk-390x844.png) views, [SpaPhish desktop](docs/media/spaphish499-desk-1440x1000.png), and recorded replays for [AI Email](docs/media/ai200-recorded-replay-1440.webm) and [SpaPhish](docs/media/spaphish499-recorded-replay-1440.webm). The deployed root and SpaPhish hash route returned HTTP 200 during release verification.
 
 ## Key-free local verification
 

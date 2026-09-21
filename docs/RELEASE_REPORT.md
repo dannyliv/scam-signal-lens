@@ -1,6 +1,6 @@
 # Release report
 
-This report records local pre-deployment evidence. A public repository, GitHub Pages deployment, workflow run, and Pages URL have not been verified yet.
+This report records the V1 public release. Source repository: [dannyliv/scam-signal-lens](https://github.com/dannyliv/scam-signal-lens). Pages deployment: [dannyliv.github.io/scam-signal-lens](https://dannyliv.github.io/scam-signal-lens/). Public deployment commit: `16bda35284dc311b9fca48d17c264d241a38aac3`, also resolved by tag `v1.0.0`. The [CI workflow](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552766198) and [Pages workflow](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552863086) succeeded for that deployment.
 
 ## Verified recorded replay evaluations
 
@@ -39,12 +39,12 @@ Two smoke runs, with four smoke HTTP attempts, and eight diagnostic calls are ex
 | Unit and release tests | Passed locally: 28 core tests, 7 UI tests, and 12 release tests. |
 | Typecheck and production build | Passed locally with no provider credential. |
 | Action pins, browser boundary, and static artifact checks | Passed locally. |
-| Targeted current-artifact secret scans | Passed locally for generated recordings, public corpora, and built static output. A clean public staging history, index, working-tree, and distribution scan remains required before publication. |
-| Browser replay QA | Passed locally for verified dynamic loaders, accepted Pass A and B anchors, queue controls, keyboard tabs, reduced motion, 200% page scale, Spanish hash reload, filters, Compare, Learn, inert URLs, no external resources, and no console errors. |
+| Clean public release gate | Passed in clean public staging with the pinned scanner, including working-tree, index, history, and distribution secret scans. The static artifact contained 707 files. |
+| Browser replay QA | Local QA covered verified dynamic loaders, accepted Pass A and B anchors, queue controls, keyboard tabs, reduced motion, 200% page scale, Spanish hash reload, filters, Compare, Learn, inert URLs, no external resources, and no console errors. Deployed-site verification confirmed the AI Email and SpaPhish hash routes, no console errors or external application resources, and inert message URLs. |
 | Retained screenshots | [AI Email desktop](media/ai200-desk-1440x1000.png), [tablet](media/ai200-desk-1024x768.png), and [mobile](media/ai200-desk-390x844.png); [SpaPhish desktop](media/spaphish499-desk-1440x1000.png). |
 | Recorded replay videos | [AI Email replay](media/ai200-recorded-replay-1440.webm) and [SpaPhish replay](media/spaphish499-recorded-replay-1440.webm). |
-| CSP, network, and tamper checks | Passed locally. The browser inspection found no external application resources, and tamper coverage rejects a forged serialized verification flag plus derived and request tampering. Post-deploy verification remains pending. |
-| Production gzip measurements | Pending release-evidence capture from the final public staging build. |
-| Source revision, deployment revision, Pages workflow, and Pages URL | Pending public staging, deployment, and post-deploy verification. |
+| CSP, network, and tamper checks | Passed locally and on the deployed site. The deployed root and SpaPhish hash route returned HTTP 200. The browser inspection found no external application resources, and tamper coverage rejects a forged serialized verification flag plus derived and request tampering. |
+| Production gzip measurements | Initial HTML, CSS, and entry JavaScript total 85,028 gzip bytes as a sum of built files. Entry JavaScript is 81.81 kB gzip. The AI and SpaPhish loader chunks are 57.48 kB and 142.41 kB gzip, respectively; corpus and individual replay chunks are lazy. The complete static artifact totals 3,561,572 gzip bytes as a sum of built files. These are file-gzip measurements, not network-transfer measurements. |
+| Public deployment metadata | Commit `16bda35284dc311b9fca48d17c264d241a38aac3`, tag `v1.0.0`, [CI](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552766198), [Pages](https://github.com/dannyliv/scam-signal-lens/actions/runs/35552863086), and [Pages URL](https://dannyliv.github.io/scam-signal-lens/). |
 
-Do not substitute private diagnostic output, an unavailable replay, or a local build for the pending browser and deployment evidence.
+The capture source revisions and hashes above are private-recording provenance. They are distinct from the public deployment commit and tag.
