@@ -15,7 +15,7 @@ pnpm check:artifact
 
 `pnpm build` produces `apps/web/dist`. Run the artifact check after each production build.
 
-The private recorder is intentionally outside this setup path. It needs an owner-provisioned `TYPESAFE_API_KEY` in the capture process environment, and it writes private capture output to an absolute directory outside the repository. Never place a provider key in an environment file, source file, command history, issue, build setting, or browser variable.
+The private recorder is intentionally outside this setup path. It needs an owner-provisioned `TYPESAFE_API_KEY` in the capture process environment, and it writes private capture output to an absolute directory outside the repository. Export `TYPESAFE_API_KEY` in the shell for that process, or let an owner credential facility place it in that shell, then `unset TYPESAFE_API_KEY`. Never place a provider key in an environment file, source file, command history, issue, build setting, or browser variable.
 
 Do not run capture commands in CI. CI, the static build, and Pages deployment must remain key-free.
 
@@ -25,6 +25,7 @@ Run the key-free checks before the recorder. `pnpm build:recorder` writes `tools
 
 ```sh
 pnpm build:recorder
+export TYPESAFE_API_KEY
 
 node tools/capture/dist/main.js smoke \
   --dataset data/corpora/ai-email-200-v1.json \
@@ -36,6 +37,7 @@ node tools/capture/dist/main.js record \
   --dataset data/corpora/ai-email-200-v1.json \
   --out /absolute/private-capture-ai-email-200 \
   --run-id review-ai-email-200
+unset TYPESAFE_API_KEY
 ```
 
 Private arbitrary-input analysis requires an explicit acknowledgement because it uploads the selected input:
