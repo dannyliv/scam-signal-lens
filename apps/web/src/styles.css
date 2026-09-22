@@ -32,7 +32,6 @@
 .completed-note{color:#b7c8c2;font:.78rem/1.45 ui-sans-serif;margin:12px 0 0}
 .benchmark-details{margin-top:14px}
 .benchmark-details summary{cursor:pointer;color:#d7efdb;font:600 .82rem ui-sans-serif}
-.disagreements{max-height:220px;overflow:auto;margin:6px 0 10px;padding-left:18px;color:#c5d5cf;font:.72rem/1.4 ui-sans-serif}
 .prose h3{margin:22px 0 8px;font-size:1.15rem;letter-spacing:-.02em}
 .prose ul{max-width:730px;color:#b8c6c1;font:.95rem/1.6 ui-sans-serif;padding-left:1.2rem}
 .prose li{margin:8px 0}
