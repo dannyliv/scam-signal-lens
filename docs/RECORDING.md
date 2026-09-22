@@ -1,23 +1,29 @@
 # Private recording
 
-Recording is a private, owner-run process. It sends the selected corpus text to the hosted provider and must never run in CI or from the browser. Keep the output at an absolute directory outside this repository.
+Recording is a private, owner-run process. It sends the selected corpus text to TypeSafe at `https://api.typesafe.ai/v1/systemone` and must never run in CI or from the browser. Keep the output at an absolute directory outside this repository. The requested model is `jev-1.13.0`.
 
-The built recorder exposes these commands:
+Build the recorder with `pnpm build:recorder` before the commands below. That script writes `tools/capture/dist/main.js`. Export `TYPESAFE_API_KEY` in the shell for that process, or let an owner credential facility place it in that shell, then `unset TYPESAFE_API_KEY`. The process reads `process.env.TYPESAFE_API_KEY` and throws `TYPESAFE_API_KEY is required by the private capture process` when the variable is missing. Do not place the key in a command, source file, environment file, CI setting, generated module, or shell history.
 
 ```sh
+pnpm build:recorder
+export TYPESAFE_API_KEY
+
 node tools/capture/dist/main.js smoke \
   --dataset data/corpora/ai-email-200-v1.json \
-  --out /absolute/private-capture-output \
+  --out /absolute/private-capture-smoke \
   --run-id review-smoke \
   --example AIB001
 
 node tools/capture/dist/main.js record \
   --dataset data/corpora/ai-email-200-v1.json \
-  --out /absolute/private-capture-output \
+  --out /absolute/private-capture-ai-email-200 \
   --run-id review-ai-email-200
+unset TYPESAFE_API_KEY
 ```
 
-The provider credential is provisioned only to that process. Do not place it in a command, source file, environment file, CI setting, generated module, or shell history.
+`record` also accepts `--recover-from <parent-private-output>`. Add `--changed-example <id>` when one example input changed. The parent must be a different absolute directory outside the repository. Those flags are valid on `record` only. Reusing an `--out` directory keeps that run's configuration. A changed run id, corpus, question bundle, policy, model, segmentation, attempt cap, recovery lineage, or source-content hash is rejected with `existing capture run configuration is immutable`.
+
+The same `smoke` and `record` flags accept `data/corpora/spaphish-v5.json`. Use a separate output directory and an id from that file, such as `SPAPHISH-001`. A new recording of that checked-in 499-row public projection is private output. `pnpm evaluate` and public export accept the original frozen source capture for SpaPhish, not that new run.
 
 Arbitrary local analysis is separate and requires explicit acknowledgement because it uploads the selected text:
 

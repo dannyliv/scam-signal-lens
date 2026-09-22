@@ -46,6 +46,29 @@ pnpm check:artifact
 
 The build output is `apps/web/dist`. The release workflow uploads that directory only.
 
+## Quick start: private capture
+
+The key-free checks above are the path for most readers. GitHub Pages replays those committed recordings. That demo is key-free: the browser has no key field, no provider client, and no live inference. Private capture is a separate Node process. Its journal stays outside this repository and is not published to Pages.
+
+Install dependencies with the key-free steps, then build the recorder. Command details are in [setup](docs/SETUP.md) and [recording](docs/RECORDING.md). Key handling is in [security](docs/SECURITY.md).
+
+```sh
+pnpm build:recorder
+export TYPESAFE_API_KEY
+node tools/capture/dist/main.js smoke \
+  --dataset data/corpora/ai-email-200-v1.json \
+  --out /absolute/private-capture-smoke \
+  --run-id review-smoke \
+  --example AIB001
+unset TYPESAFE_API_KEY
+```
+
+Assign `TYPESAFE_API_KEY` in that shell before the export, or let an owner credential facility place it in that shell. The recorder reads `process.env.TYPESAFE_API_KEY` and throws `TYPESAFE_API_KEY is required by the private capture process` when the variable is missing. Unset it when the process finishes. Never commit a key. Do not place it in an environment file, source file, shell history, CI setting, or browser variable.
+
+`--out` is an absolute directory outside this repository. The recorder rejects a path inside the repository.
+
+The command above smokes one row of the bundled English corpus. `record` walks that file, and the same flags accept `data/corpora/spaphish-v5.json`. For other data, point `--dataset` at a corpus JSON that passes `validateCorpusEnvelope` in `packages/core/src/schema.ts` (mirror `data/corpora/ai-email-200-v1.json`), or use `analyze` with `--input-file` and `--acknowledge-provider-upload true` for one input accepted by `projectModelInput` in `packages/core/src/input.ts`. Those commands upload the selected text. The requested model is `jev-1.13.0`. [Setup](docs/SETUP.md) and [recording](docs/RECORDING.md) cover `record`, `analyze`, local evaluation, and public export. Public export accepts a complete verified capture of an allowlisted frozen corpus only. It does not publish `analyze` output or a corpus you author, and it does not call the provider.
+
 ## Scope
 
 The primary benchmark corpora are kept separate:
