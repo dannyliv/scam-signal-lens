@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { evaluation as aiEvaluation, run as aiRun } from '../src/generated/records/ai-email-200-v1/record-loader';
 import { evaluation as spaEvaluation, run as spaRun } from '../src/generated/records/spaphish-v5/record-loader';
+import { evaluation as spaEsEvaluation } from '../src/generated/records/spaphish-v5-es-questions/record-loader';
 import { chartSeries, formatRecordedRatio, readConfusion, recordedCaptureLines } from '../src/recorded-metrics';
 
 describe('recorded result charts', () => {
@@ -13,8 +14,13 @@ describe('recorded result charts', () => {
       ['Precision', '93.48% (43/46)'],
       ['Recall', '17.27% (43/249)']
     ]);
+    expect(chartSeries(spaEsEvaluation).map((item) => [item.name, formatRecordedRatio(item.ratio)])).toEqual([
+      ['Precision', '90.63% (58/64)'],
+      ['Recall', '23.29% (58/249)']
+    ]);
     expect(readConfusion(aiEvaluation)).toEqual({ tp: 92, fp: 0, tn: 100, fn: 8 });
     expect(readConfusion(spaEvaluation)).toEqual({ tp: 43, fp: 3, tn: 247, fn: 206 });
+    expect(readConfusion(spaEsEvaluation)).toEqual({ tp: 58, fp: 6, tn: 244, fn: 191 });
   });
 
   it('labels a missing metric instead of inventing one', () => {
