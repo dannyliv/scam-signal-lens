@@ -36,6 +36,6 @@
 .prose ul{max-width:730px;color:#b8c6c1;font:.95rem/1.6 ui-sans-serif;padding-left:1.2rem}
 .prose li{margin:8px 0}
 .footer-links{display:flex;gap:14px;flex-wrap:wrap}
-.footer-links button{border:0;background:transparent;color:#8fbfa8;padding:0;font:.72rem ui-sans-serif}
+.footer-links button,.footer-links a{border:0;background:transparent;color:#8fbfa8;padding:0;font:.72rem ui-sans-serif;text-decoration:none}
 @media(max-width:800px){.results-grid{grid-template-columns:1fr}.replay-workspace{grid-template-columns:minmax(0,1fr)}.bar-row,.bar-meaning{grid-template-columns:1fr;grid-column:1}}
 @media(max-width:640px){.tab{min-width:140px}.footer-links{margin-top:8px}}

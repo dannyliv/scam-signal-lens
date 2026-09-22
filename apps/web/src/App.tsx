@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { datasets, type CorpusExample, type GeneratedDatasetIndex } from './generated/dataset-index';
-import { CompareView, LearnView, LocalView, MethodView, SourcesView } from './SecondaryViews';
+import { CompareView, LearnView, LocalView, MethodView, SourceRepositoryLink, SourcesView } from './SecondaryViews';
 import { ResultsView } from './ResultsView';
 import { ReplayPanel } from './ReplayPanel';
 import { RunPanel } from './RunPanel';
@@ -153,7 +153,7 @@ export function App() {
     {view === 'learn' && <LearnView dataset={dataset} examples={examples} />}
     {view === 'local' && <LocalView />}
     {view === 'sources' && <SourcesView dataset={dataset} selected={selected} />}
-    <footer><span>{PRODUCT_VERSION} · Static replay only. No message uploads, analytics, or live inference.</span><span className="footer-links"><button type="button" onClick={() => openExtra('compare')}>Compare</button><button type="button" onClick={() => openExtra('learn')}>Learn</button><button type="button" onClick={() => openExtra('local')}>Run locally</button><button type="button" onClick={() => openExtra('sources')}>Sources</button></span></footer>
+    <footer><span>{PRODUCT_VERSION} · Static replay only. No message uploads, analytics, or live inference.</span><span className="footer-links"><button type="button" onClick={() => openExtra('compare')}>Compare</button><button type="button" onClick={() => openExtra('learn')}>Learn</button><button type="button" onClick={() => openExtra('local')}>Run locally</button><button type="button" onClick={() => openExtra('sources')}>Sources</button><SourceRepositoryLink /></span></footer>
   </main>;
 }
 

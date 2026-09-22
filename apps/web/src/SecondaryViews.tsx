@@ -91,7 +91,13 @@ export function MethodView() {
   </section>;
 }
 
-export function LocalView() { return <section className="secondary prose"><p className="eyebrow">RUN LOCALLY</p><h2>Use a private environment for live analysis.</h2><p>The public website cannot evaluate pasted text. A local analysis uploads the selected message text to the hosted provider and needs an owner-supplied credential. Keep private output outside the repository.</p><pre>pnpm build:recorder{`\n`}node tools/capture/dist/main.js analyze \\{`\n`}  --input-file /absolute/private-input.json \\{`\n`}  --language en --acknowledge-provider-upload true \\{`\n`}  --out /absolute/private-analysis-output --run-id private-review</pre><p>Run key-free validation with <code>pnpm test</code>, <code>pnpm typecheck</code>, and <code>pnpm build</code>. Private analyses cannot become public replay records without the project’s separate capture and review process.</p></section>; }
+export const SOURCE_REPOSITORY_URL = 'https://github.com/dannyliv/scam-signal-lens';
+
+export function SourceRepositoryLink() {
+  return <a href={SOURCE_REPOSITORY_URL} target="_blank" rel="noopener noreferrer">Source on GitHub</a>;
+}
+
+export function LocalView() { return <section className="secondary prose"><p className="eyebrow">RUN LOCALLY</p><h2>Use a private environment for live analysis.</h2><p>The public website cannot evaluate pasted text. A local analysis uploads the selected message text to the hosted provider and needs an owner-supplied credential. Keep private output outside the repository.</p><pre>pnpm build:recorder{`\n`}node tools/capture/dist/main.js analyze \\{`\n`}  --input-file /absolute/private-input.json \\{`\n`}  --language en --acknowledge-provider-upload true \\{`\n`}  --out /absolute/private-analysis-output --run-id private-review</pre><p>Run key-free validation with <code>pnpm test</code>, <code>pnpm typecheck</code>, and <code>pnpm build</code>. Private analyses cannot become public replay records without the project’s separate capture and review process.</p><p><SourceRepositoryLink /></p></section>; }
 
 function download(payload: unknown) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
