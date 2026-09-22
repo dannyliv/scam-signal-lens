@@ -6,12 +6,13 @@ The public source is [dannyliv/scam-signal-lens](https://github.com/dannyliv/sca
 
 ## Local verified evaluation
 
-The fixed `policy-v1` concern policy is evaluated separately for each corpus. These are recorded replay results, not live provider calls or a claim that a signal probability is a phishing probability.
+The fixed `policy-v1` concern policy is evaluated separately for AI Email 200 and the English-question SpaPhish recording. The Spanish-question SpaPhish recording uses `policy-v1-es-exp` (YES 0.70) and is reported on its own row. These are recorded replay results, not live provider calls or a claim that a signal probability is a phishing probability.
 
 | Corpus | Rows | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy | Specificity | False-positive rate | Evidence coverage |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | AI Email 200 | 200 | 92 | 0 | 100 | 8 | 100.00% | 92.00% | 95.83% | 96.00% | 100.00% | 0.00% | 436 of 782 eligible signals, 55.75% |
 | SpaPhish v5 public projection | 499 | 43 | 3 | 247 | 206 | 93.48% | 17.27% | 29.15% | 58.12% | 98.80% | 1.20% | 460 of 1,357 eligible signals, 33.90% |
+| SpaPhish v5 [Spanish Input Questions] | 499 | 58 | 6 | 244 | 191 | 90.63% | 23.29% | 37.06% | 60.52% | 97.60% | 2.40% | 421 of 1,337 eligible signals, 31.49% |
 
 Recorded concern counts by source label. Alert is `strong_warning_signs`. These counts are separate from the confusion matrix above.
 
@@ -21,8 +22,10 @@ Recorded concern counts by source label. Alert is `strong_warning_signs`. These 
 | AI Email 200 | Benign | 0 | 40 | 60 | 0 | 0 |
 | SpaPhish v5 public projection | Phishing | 43 | 183 | 23 | 0 | 0 |
 | SpaPhish v5 public projection | Benign | 3 | 119 | 128 | 0 | 0 |
+| SpaPhish v5 [Spanish Input Questions] | Phishing | 58 | 165 | 26 | 0 | 0 |
+| SpaPhish v5 [Spanish Input Questions] | Benign | 6 | 126 | 118 | 0 | 0 |
 
-The SpaPhish result is a user-authorized public 499-row projection of a source 500-row capture. `SPAPHISH-088` had an accepted Pass A but no accepted Pass B after the bounded diagnostic budget, so it is excluded only from the public projection. The source-run totals remain source-scoped. See the [dataset documentation](docs/DATASETS.md), [model card](docs/MODEL_CARD.md), and [release report](docs/RELEASE_REPORT.md).
+The SpaPhish result is a user-authorized public 499-row projection of a source 500-row capture. `SPAPHISH-088` had an accepted Pass A but no accepted Pass B after the bounded diagnostic budget, so it is excluded only from the public projection. The source-run totals remain source-scoped. The Spanish Input Questions row is a separate recording of that same 499-email public subset, asked in Spanish under `policy-v1-es-exp`. See the [dataset documentation](docs/DATASETS.md), [model card](docs/MODEL_CARD.md), and [release report](docs/RELEASE_REPORT.md).
 
 ## Recorded replay evidence
 
@@ -99,6 +102,7 @@ A source edit needs `pnpm build:recorder` (that runs `pnpm build:core`, then com
 | `CHOICE_CONFIDENCE_FLOOR` 0.65, `CHOICE_WINNER_PROBABILITY_FLOOR` 0.7 | `policy.ts` | A contextual choice counts only when confidence and winner probability both clear the floors | Same as `YES` / `NO` |
 | H1–H5 in `derivePolicy` | `policy.ts` | Any match is alert `strong_warning_signs`. H1: `credential_request`. H2: `advance_fee_or_refund_trap`. H3: `payment_request` plus `unusual_payment_routing`, `verification_bypass`, or `unrealistic_reward`. H4: `remote_access_request` plus `urgency_pressure` or `verification_bypass`, unless the route is `independently_established` at both floors. H5: `sensitive_data_request` on `sender_supplied` at both floors plus `urgency_pressure` or `authority_claim`. | Same as `YES` / `NO` |
 | `POLICY_VERSION` `policy-v1` | `policyFingerprint()` in `policy.ts` | Bound with the numbers and rule ids `H1`–`H5` into `policySha256` | Same as `YES` / `NO` |
+| `policy-v1-es-exp`, `YES` 0.70 | [`packages/core/src/policy-es-exp.ts`](packages/core/src/policy-es-exp.ts) | Spanish-question SpaPhish replay only. `NO` and the choice floors stay at the baseline values. | Source edit. New run. Baseline `policy-v1` recordings keep YES 0.80. |
 | `signalDefinitions`, Pass A/B | [`packages/core/src/questions.ts`](packages/core/src/questions.ts) | Twelve Noul signals plus `message_role` and `request_route`. Pass B when a signal is above `NO`, unless subject or body has more than 64 segments (`candidate_limit`). Scope `synthetic_sanitized` only for dataset id `ai-email-200-v1`; otherwise `source_messages`, including `analyze`. Question-bundle hash is the Pass A `questions` object and omits message text. | Source edit. New run. Question-bundle hash changes. |
 | `REQUESTED_MODEL` `jev-1.13.0` | `questions.ts`, and the same literal in [`tools/capture/src/main.ts`](tools/capture/src/main.ts) (analyze manifest, recovery config, smoke/record config) | Model on the request and the run. Response `model` must match. Keep the copies equal. | Source edit. New run. No model flag. |
 | `INPUT_LIMITS`, channels | [`packages/core/src/input.ts`](packages/core/src/input.ts) | Limits and channels in [Use your own data](#use-your-own-data) | Changing the constants is a source edit and a new run. Your file is data only. |
@@ -110,7 +114,7 @@ A source edit needs `pnpm build:recorder` (that runs `pnpm build:core`, then com
 
 If no H rule matches, a role or route below a choice floor whose winner is `mixed_or_unclear` or `mixed_or_unknown` is `not_enough_evidence`. `verify_first` covers an uncertain review signal (`credential_request`, `sensitive_data_request`, `unusual_payment_routing`, `verification_bypass`, `advance_fee_or_refund_trap`, `analyzer_instruction`), an indicated `verification_bypass` or `analyzer_instruction`, an indicated `payment_request`, `sensitive_data_request`, or `remote_access_request` that is not independently established at both floors, or a role or route below a floor. Otherwise the concern is `few_warning_signs`. The eval alert is `strong_warning_signs`. See [evaluation](docs/EVALUATION.md).
 
-Checked-in replays stay on frozen `policy-v1`. `verifyReplayRecord` in [`packages/core/src/replay.ts`](packages/core/src/replay.ts) checks the running core's policy hash, question-bundle hash, segmentation version, and model, so `pnpm recording:verify` rejects those replays after one of those bindings moves. Pages keeps the deployed replay.
+Checked-in AI Email and English-question SpaPhish replays stay on frozen `policy-v1`. The Spanish-question SpaPhish replay stays on `policy-v1-es-exp` (`YES` 0.70). `verifyReplayRecord` in [`packages/core/src/replay.ts`](packages/core/src/replay.ts) resolves each recording by its policy hash and question-bundle hash, and also checks segmentation version and model, so `pnpm recording:verify` rejects a replay after one of those bindings moves. Pages keeps the deployed replay.
 
 ## Scope
 
@@ -118,6 +122,7 @@ The primary benchmark corpora are kept separate:
 
 - `ai-email-200-v1`: 200 original English emails, with 100 dataset-author benign labels and 100 dataset-author phishing labels.
 - `spaphish-v5`: 499 Spanish emails from a frozen 500-row selection, with 250 upstream benign labels and 249 upstream phishing labels after one documented post-capture evidence exclusion.
+- `spaphish-v5-es-questions`: the same 499 Spanish emails, recorded with Spanish signal questions under `policy-v1-es-exp` (YES 0.70).
 
 Dataset labels are annotations, not findings by the application. The synthetic set is constructed, and neither corpus establishes real-world prevalence, sender identity, safety, calibration, or detection performance. See [dataset documentation](docs/DATASETS.md) and the [scope addendum](docs/SCOPE-ADDENDUM.md).
 

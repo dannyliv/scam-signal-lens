@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
-import { POLICY_VERSION, evaluateDataset, sha256Web, type EvaluationRow, type PublicCaptureEvent } from "@scam-signal-lens/core";
+import { POLICY_VERSION, POLICY_VERSION_ES_EXP, evaluateDataset, sha256Web, type EvaluationRow, type PublicCaptureEvent } from "@scam-signal-lens/core";
 
 type Example = { id: string; language: "en" | "es"; input: { channel: "email"; subject: string | null; body: string; userContext: string }; groundTruth: { label: EvaluationRow["label"] } };
 type VerifiedReplay = { record: { evidencePassStatus: string; derived: { concern: EvaluationRow["concern"]; evidence: Record<string, { status: string }> } } };
@@ -20,13 +20,18 @@ type DatasetIndexEntry = { id: string; total: number; loadExamples: () => Promis
 const root = resolve(import.meta.dirname, "..");
 const generated = resolve(root, "apps/web/src/generated/records");
 const generatedIndex = await import(pathToFileURL(resolve(root, "apps/web/src/generated/dataset-index.ts")).href) as { datasets: DatasetIndexEntry[] };
-const allDatasets = ["ai-email-200-v1", "spaphish-v5"] as const;
+const allDatasets = ["ai-email-200-v1", "spaphish-v5", "spaphish-v5-es-questions"] as const;
+const corpusFiles: Record<(typeof allDatasets)[number], string> = {
+  "ai-email-200-v1": "ai-email-200-v1.json",
+  "spaphish-v5": "spaphish-v5.json",
+  "spaphish-v5-es-questions": "spaphish-v5.json",
+};
 const selected = process.argv.includes("--dataset") ? process.argv[process.argv.indexOf("--dataset") + 1] : undefined;
 if (selected !== undefined && !allDatasets.includes(selected as typeof allDatasets[number])) throw new Error("--dataset must name a frozen public corpus");
 const datasets = selected === undefined ? allDatasets : allDatasets.filter((datasetId) => datasetId === selected);
 
 for (const datasetId of datasets) {
-  const corpus = JSON.parse(await readFile(resolve(root, "data/corpora", `${datasetId}.json`), "utf8")) as { examples: Example[] };
+  const corpus = JSON.parse(await readFile(resolve(root, "data/corpora", corpusFiles[datasetId]), "utf8")) as { examples: Example[] };
   const indexed = generatedIndex.datasets.find((dataset) => dataset.id === datasetId);
   if (!indexed || indexed.total !== corpus.examples.length) throw new Error(`${datasetId}: generated dataset index is missing or has the wrong count`);
   const indexedExamples = await indexed.loadExamples();
@@ -68,7 +73,8 @@ for (const datasetId of datasets) {
   });
   if (await sha256Web(expectedRows) !== await sha256Web(loader.rows)) throw new Error(`${datasetId}: generated rows do not match verified replay records and corpus labels`);
 
-  const { evaluatedAt: _generatedAt, ...expectedEvaluation } = evaluateDataset(datasetId, expectedRows, { runId: loader.run.runId, policyVersion: POLICY_VERSION, questionHash: loader.run.questionBundleSha256 });
+  const policyVersion = datasetId === "spaphish-v5-es-questions" ? POLICY_VERSION_ES_EXP : POLICY_VERSION;
+  const { evaluatedAt: _generatedAt, ...expectedEvaluation } = evaluateDataset(datasetId, expectedRows, { runId: loader.run.runId, policyVersion, questionHash: loader.run.questionBundleSha256 });
   const { evaluatedAt: _recordedAt, ...recordedEvaluation } = loader.evaluation as { evaluatedAt?: string; [key: string]: unknown };
   if (await sha256Web(expectedEvaluation) !== await sha256Web(recordedEvaluation)) throw new Error(`${datasetId}: generated evaluation does not match the verified replay rows`);
 }

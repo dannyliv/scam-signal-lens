@@ -25,6 +25,8 @@ unset TYPESAFE_API_KEY
 
 The same `smoke` and `record` flags accept `data/corpora/spaphish-v5.json`. Use a separate output directory and an id from that file, such as `SPAPHISH-001`. A new recording of that checked-in 499-row public projection is private output. `pnpm evaluate` and public export accept the original frozen source capture for SpaPhish, not that new run.
 
+The checked-in `spaphish-v5-es-questions` modules are a separate public replay of that same 499-email projection. They use Spanish signal questions and `policy-v1-es-exp` with YES at 0.70, beside the English-question SpaPhish replay. The private capture directory stays outside this repository. The recorder still posts to `https://api.typesafe.ai/v1/systemone`.
+
 Arbitrary local analysis is separate and requires explicit acknowledgement because it uploads the selected text:
 
 ```sh

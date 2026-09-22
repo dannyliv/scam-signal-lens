@@ -1,6 +1,6 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
-import { POLICY_VERSION, SIGNAL_IDS, evaluateDataset, sha256Web, verifyReplayRecord, validateCorpusEnvelope, type CorpusEnvelope, type EvaluationRow, type PublicCaptureEvent, type ReplayRecord } from "@scam-signal-lens/core";
+import { POLICY_VERSION, POLICY_VERSION_ES_EXP, SIGNAL_IDS, evaluateDataset, sha256Web, verifyReplayRecord, validateCorpusEnvelope, type CorpusEnvelope, type EvaluationRow, type PublicCaptureEvent, type ReplayRecord } from "@scam-signal-lens/core";
 
 type Frozen = { id: "ai-email-200-v1" | "spaphish-v5"; hash: string; count: number; benign: number; phishing: number; scope: ReplayRecord["questionScope"] };
 const frozen: Record<string, Frozen> = {
@@ -66,11 +66,11 @@ export function publicEvents(value: unknown, id: string): PublicCaptureEvent[] {
   return result;
 }
 
-export function parseManifest(raw: unknown): Manifest {
+export function parseManifest(raw: unknown, binding: "capture" | "frozen" = "capture"): Manifest {
   if (!object(raw)) throw new Error("invalid recording manifest");
   const baseFields = ["schemaVersion", "runId", "datasetId", "datasetSha256", "questionBundleSha256", "policySha256", "requestedModel", "segmentationVersion", "sourceContentSha256", "declaredHttpAttemptCap", "actualHttpAttemptCount", "runWallElapsedMs", "runWallMeasurement", "unknownInterruptedSessionCount", "captureSessions", "completedCount", "expectedCount", "configSha256", "records", "failures"];
   exact(raw, raw.recoveryLineage === undefined ? baseFields : [...baseFields, "recoveryLineage"], "recording manifest");
-  const dataset = captureSources[raw.datasetId as string];
+  const dataset = (binding === "frozen" ? frozen : captureSources)[raw.datasetId as string];
   if (raw.schemaVersion !== "1.0.0" || !dataset) throw new Error("manifest must name a frozen public corpus");
   if (!Array.isArray(raw.records) || !Array.isArray(raw.failures) || !Array.isArray(raw.captureSessions)) throw new Error("invalid manifest collections");
   const records = raw.records.map((entry) => {
@@ -186,14 +186,16 @@ function copy(record: ReplayRecord): ReplayRecord {
 }
 
 async function refreshDatasetIndex() {
-  const loaders = await Promise.all(Object.keys(frozen).map(async (id) => {
+  const ids = ["ai-email-200-v1", "spaphish-v5", "spaphish-v5-es-questions"] as const;
+  const loaders = await Promise.all(ids.map(async (id) => {
     try { await readFile(resolve(generatedRoot, "records", id, "record-loader.ts"), "utf8"); return id; } catch { return null; }
   }));
-  const available = new Set(loaders.filter((id): id is string => id !== null));
-  const aiAvailable = available.has("ai-email-200-v1"), spaAvailable = available.has("spaphish-v5");
+  const available = new Set(loaders.filter((id): id is (typeof ids)[number] => id !== null));
+  const aiAvailable = available.has("ai-email-200-v1"), spaAvailable = available.has("spaphish-v5"), spaEsAvailable = available.has("spaphish-v5-es-questions");
   const source = [
     ...(aiAvailable ? ["const loadAiModule = () => import('./records/ai-email-200-v1/record-loader');", "const loadAiRecord = async (example: CorpusExample) => (await loadAiModule()).loadRecord(example);", "const loadAiRun = async () => (await loadAiModule()).loadRun();"] : []),
     ...(spaAvailable ? ["const loadSpaModule = () => import('./records/spaphish-v5/record-loader');", "const loadSpaRecord = async (example: CorpusExample) => (await loadSpaModule()).loadRecord(example);", "const loadSpaRun = async () => (await loadSpaModule()).loadRun();"] : []),
+    ...(spaEsAvailable ? ["const loadSpaEsModule = () => import('./records/spaphish-v5-es-questions/record-loader');", "const loadSpaEsRecord = async (example: CorpusExample) => (await loadSpaEsModule()).loadRecord(example);", "const loadSpaEsRun = async () => (await loadSpaEsModule()).loadRun();"] : []),
     "",
     "export type CorpusExample = {",
     "  id: string; datasetId: string; title: string; language: 'en' | 'es';",
@@ -209,26 +211,31 @@ async function refreshDatasetIndex() {
     "const unavailable = async () => null;",
     "export const datasets: GeneratedDatasetIndex[] = [",
     "  { id: 'ai-email-200-v1', name: 'AI Email 200', language: 'English', sampleNote: '200 authored emails, balanced by dataset label.', total: 200, loadExamples: async () => (await import('../../../../data/corpora/ai-email-200-v1.json')).default.examples as CorpusExample[], loadRecord: " + (aiAvailable ? "loadAiRecord, loadRun: loadAiRun" : "unavailable, loadRun: unavailable") + " },",
-    "  { id: 'spaphish-v5', name: 'SpaPhish v5', language: 'Spanish', sampleNote: '499-email public subset from SpaPhish v5: 250 benign and 249 phishing labels after one authorized post-capture exclusion.', total: 499, loadExamples: async () => (await import('../../../../data/corpora/spaphish-v5.json')).default.examples as CorpusExample[], loadRecord: " + (spaAvailable ? "loadSpaRecord, loadRun: loadSpaRun" : "unavailable, loadRun: unavailable") + " }",
+    "  { id: 'spaphish-v5', name: 'SpaPhish v5', language: 'Spanish', sampleNote: '499-email public subset from SpaPhish v5: 250 benign and 249 phishing labels after one authorized post-capture exclusion.', total: 499, loadExamples: async () => (await import('../../../../data/corpora/spaphish-v5.json')).default.examples as CorpusExample[], loadRecord: " + (spaAvailable ? "loadSpaRecord, loadRun: loadSpaRun" : "unavailable, loadRun: unavailable") + " }" + (spaEsAvailable ? "," : ""),
+    ...(spaEsAvailable ? ["  { id: 'spaphish-v5-es-questions', name: 'SpaPhish v5 [Spanish Input Questions]', language: 'Spanish · ES questions', sampleNote: 'Same 499-email SpaPhish v5 public subset, recorded with Spanish signal questions under policy-v1-es-exp (YES 0.70).', total: 499, loadExamples: async () => (await import('../../../../data/corpora/spaphish-v5.json')).default.examples as CorpusExample[], loadRecord: loadSpaEsRecord, loadRun: loadSpaEsRun }"] : []),
     "];",
     ""
   ].join("\n");
   await writeFile(resolve(generatedRoot, "dataset-index.ts"), source);
 }
 
-export async function buildPublicData(corpusPath: string, recordsPath: string, outputPath: string, final: boolean) {
+export async function buildPublicData(corpusPath: string, recordsPath: string, outputPath: string, final: boolean, publicDatasetId?: string) {
   if (!final) throw new Error("public export requires --final and a complete frozen capture");
   const corpus = await read(resolve(corpusPath)) as CorpusEnvelope;
   validateCorpusEnvelope(corpus);
   const dataset = frozen[corpus.examples[0]?.datasetId ?? ""];
   if (!dataset || corpus.examples.some((example) => example.datasetId !== dataset.id) || corpus.examples.length !== dataset.count || corpus.examples.filter((example) => example.groundTruth.label === "benign").length !== dataset.benign || corpus.examples.filter((example) => example.groundTruth.label === "phishing").length !== dataset.phishing || await sha256Web(corpus) !== dataset.hash) throw new Error("corpus must be a frozen public corpus");
-  const projection = parsePublicProjection(corpus);
-  if ((projection === null) !== (dataset.id !== "spaphish-v5")) throw new Error("public corpus projection metadata does not match its frozen cohort");
+  const publishedId = publicDatasetId ?? dataset.id;
+  if (publishedId !== dataset.id && publishedId !== "spaphish-v5-es-questions") throw new Error("unsupported public dataset id");
+  if (publishedId === "spaphish-v5-es-questions" && dataset.id !== "spaphish-v5") throw new Error("Spanish-question publication requires the frozen SpaPhish corpus");
+  const directFrozenCapture = publishedId === "spaphish-v5-es-questions";
+  const projection = directFrozenCapture ? null : parsePublicProjection(corpus);
+  if (!directFrozenCapture && (projection === null) !== (dataset.id !== "spaphish-v5")) throw new Error("public corpus projection metadata does not match its frozen cohort");
   const destination = resolve(outputPath);
   if (!under(destination, generatedRoot)) throw new Error("public modules must be generated under apps/web/src/generated");
   const sourceManifest = await read(resolve(recordsPath, "manifest.json"));
-  const manifest = parseManifest(sourceManifest);
-  const sourceDataset = captureSources[manifest.datasetId];
+  const manifest = parseManifest(sourceManifest, directFrozenCapture ? "frozen" : "capture");
+  const sourceDataset = (directFrozenCapture ? frozen : captureSources)[manifest.datasetId];
   if (!sourceDataset || (projection === null ? manifest.datasetId !== dataset.id : manifest.datasetId !== projection.sourceDatasetId || manifest.datasetSha256 !== projection.parentCorpusSha256)) throw new Error("manifest configuration hash mismatch");
   await verifyManifestConfig(manifest);
   const enrolled = new Map(corpus.examples.map((example) => [example.id, example]));
@@ -265,7 +272,7 @@ export async function buildPublicData(corpusPath: string, recordsPath: string, o
     const values = record ? Object.values(record.derived.evidence) : [];
     return { id: example.id, label: example.groundTruth.label, concern: record?.derived.concern ?? null, evidenceEligible: values.filter((item) => item.status !== "not_requested").length, evidenceSelected: values.filter((item) => item.status === "selected").length, evidence, captureComplete: record !== undefined && record.evidencePassStatus !== "failed" };
   });
-  const { evaluatedAt: _generatedAt, ...evaluation } = evaluateDataset(dataset.id, rows, { runId: manifest.runId, policyVersion: POLICY_VERSION, questionHash: manifest.questionBundleSha256 });
+  const { evaluatedAt: _generatedAt, ...evaluation } = evaluateDataset(publishedId, rows, { runId: manifest.runId, policyVersion: directFrozenCapture ? POLICY_VERSION_ES_EXP : POLICY_VERSION, questionHash: manifest.questionBundleSha256 });
   const allEvents = manifest.records.flatMap((entry) => entry.events).sort((left, right) => {
     const session = manifest.captureSessions.findIndex((item) => item.captureSessionId === left.captureSessionId) - manifest.captureSessions.findIndex((item) => item.captureSessionId === right.captureSessionId);
     return session === 0 ? left.seq - right.seq : session;
@@ -274,14 +281,14 @@ export async function buildPublicData(corpusPath: string, recordsPath: string, o
   for (const [id, value] of accepted) await writeFile(resolve(destination, "record-" + id + ".ts"), "import type { PublicCaptureEvent, ReplayRecord } from '@scam-signal-lens/core';\nexport const record = " + JSON.stringify(value.record, null, 2) + " as ReplayRecord;\nexport const events = " + JSON.stringify(value.entry.events, null, 2) + " as readonly PublicCaptureEvent[];\nexport const recordSha256 = " + JSON.stringify(value.entry.recordSha256) + ";\nexport const replayAnchors = " + JSON.stringify(value.replayAnchors) + " as const;\nexport const projectionSha256 = " + JSON.stringify(value.projectionSha256) + ";\n");
   const sourceRun = { runId: manifest.runId, datasetId: manifest.datasetId, datasetSha256: manifest.datasetSha256, questionBundleSha256: manifest.questionBundleSha256, policySha256: manifest.policySha256, requestedModel: manifest.requestedModel, segmentationVersion: manifest.segmentationVersion, sourceContentSha256: manifest.sourceContentSha256, declaredHttpAttemptCap: manifest.declaredHttpAttemptCap, actualHttpAttemptCount: manifest.actualHttpAttemptCount, runWallElapsedMs: manifest.runWallElapsedMs, runWallMeasurement: manifest.runWallMeasurement, unknownInterruptedSessionCount: manifest.unknownInterruptedSessionCount, configSha256: manifest.configSha256, expectedCount: manifest.expectedCount, completedCount: manifest.completedCount, captureSessions: manifest.captureSessions, recoveryLineage: manifest.recoveryLineage, failures: manifest.failures.map((failure) => ({ exampleId: failure.exampleId, errorCode: failure.errorCode })) };
   const projectionLineage = projection === null ? null : { kind: projection.kind, sourceManifestSha256: await sha256Web(sourceManifest), sourceDatasetSha256: manifest.datasetSha256, sourceConfigSha256: manifest.configSha256, sourceExpectedCount: projection.sourceExpectedCount, excludedExampleIds: projection.excludedExampleIds };
-  const publicRun = { schemaVersion: manifest.schemaVersion, runId: manifest.runId, datasetId: dataset.id, datasetSha256: dataset.hash, questionBundleSha256: manifest.questionBundleSha256, policySha256: manifest.policySha256, requestedModel: manifest.requestedModel, segmentationVersion: manifest.segmentationVersion, sourceContentSha256: manifest.sourceContentSha256, expectedCount: dataset.count, completedCount: dataset.count, failures: [], projectionLineage, sourceRun };
+  const publicRun = { schemaVersion: manifest.schemaVersion, runId: manifest.runId, datasetId: publishedId, datasetSha256: dataset.hash, questionBundleSha256: manifest.questionBundleSha256, policySha256: manifest.policySha256, requestedModel: manifest.requestedModel, segmentationVersion: manifest.segmentationVersion, sourceContentSha256: manifest.sourceContentSha256, expectedCount: dataset.count, completedCount: dataset.count, failures: [], projectionLineage, sourceRun };
   const anchorsByExample = Object.fromEntries([...accepted.entries()].map(([id, value]) => [id, value.replayAnchors]));
   const runProjectionSha256 = await sha256Web(runProjection(publicRun, rows, evaluation, allEvents, anchorsByExample));
   const loader = ["import { sha256Web, verifyReplayRecord, type EvaluationRow, type PublicCaptureEvent, type ReplayRecord } from '@scam-signal-lens/core';", "import type { CorpusExample } from '../../dataset-index';", "import { acceptVerifiedRecord, acceptVerifiedRun } from '../../../verified-loader-bridge';", "export type ReplayAnchors = { passA: { captureSessionId: string; seq: number }; passB: { captureSessionId: string; seq: number } | null; complete: { captureSessionId: string; seq: number } };", "export type VerifiedPublicReplay = { example: CorpusExample; record: ReplayRecord; events: readonly PublicCaptureEvent[]; replayAnchors: ReplayAnchors; recordSha256: string; provenance: { captureSessionId?: string; capturedAt: string; sourceCodeRevision?: string } };", "const modules: Record<string, () => Promise<{ record: ReplayRecord; events: readonly PublicCaptureEvent[]; recordSha256: string; replayAnchors: ReplayAnchors; projectionSha256: string }>> = {", ...[...accepted.keys()].map((id) => "  " + JSON.stringify(id) + ": () => import('./record-" + id + "'),"), "};", "export const run = " + JSON.stringify(publicRun, null, 2) + " as const;", "export const rows = " + JSON.stringify(rows, null, 2) + " as readonly EvaluationRow[];", "export const evaluation = " + JSON.stringify(evaluation, null, 2) + " as const;", "export const events = " + JSON.stringify(allEvents, null, 2) + " as readonly PublicCaptureEvent[];", "export const anchorsByExample = " + JSON.stringify(anchorsByExample, null, 2) + " as const;", "export const runProjectionSha256 = " + JSON.stringify(runProjectionSha256) + ";", "export async function loadRecord(example: CorpusExample) { const load = modules[example.id]; if (!load) return null; try { const loaded = await load(); if (await sha256Web(example.input) !== loaded.record.inputSha256 || await sha256Web(loaded.record) !== loaded.recordSha256 || await sha256Web({ inputSha256: loaded.record.inputSha256, recordSha256: loaded.recordSha256, events: loaded.events, replayAnchors: loaded.replayAnchors }) !== loaded.projectionSha256) return null; await verifyReplayRecord(loaded.record, example.input, example.language); const session = run.sourceRun.captureSessions.find((item) => item.captureSessionId === loaded.replayAnchors.passA.captureSessionId); return acceptVerifiedRecord({ example, record: loaded.record, events: loaded.events, replayAnchors: loaded.replayAnchors, recordSha256: loaded.recordSha256, provenance: { ...(session === undefined ? {} : { captureSessionId: session.captureSessionId }), capturedAt: loaded.record.passA.capturedAt, ...(session?.sourceRevision.revision === null || session === undefined ? {} : { sourceCodeRevision: session.sourceRevision.revision }) } }); } catch { return null; } }", "export async function loadRun() { if (run.completedCount !== run.expectedCount || run.failures.length !== 0 || rows.length !== run.expectedCount || evaluation.datasetId !== run.datasetId || Object.keys(anchorsByExample).length !== run.expectedCount || await sha256Web({ run, rows, evaluation, events, anchorsByExample }) !== runProjectionSha256) return null; return acceptVerifiedRun({ manifest: run, evaluation, rows, events, anchorsByExample }); }"].join("\n");
   await writeFile(resolve(destination, "record-loader.ts"), loader + "\n");
   await refreshDatasetIndex();
-  return { datasetId: dataset.id, verifiedRecordCount: accepted.size, enrolledCount: dataset.count };
+  return { datasetId: publishedId, verifiedRecordCount: accepted.size, enrolledCount: dataset.count };
 }
 
-async function main() { const corpus = arg("--corpus"), records = arg("--records"), out = arg("--out"); if (!corpus || !records || !out) throw new Error("Usage: pnpm build:public-data -- --corpus <corpus.json> --records <record-directory> --out <generated-directory> [--final]"); process.stdout.write(JSON.stringify(await buildPublicData(corpus, records, out, process.argv.includes("--final"))) + "\n"); }
+async function main() { const corpus = arg("--corpus"), records = arg("--records"), out = arg("--out"), publicDatasetId = arg("--public-dataset-id"); if (!corpus || !records || !out) throw new Error("Usage: pnpm build:public-data -- --corpus <corpus.json> --records <record-directory> --out <generated-directory> [--public-dataset-id <id>] [--final]"); process.stdout.write(JSON.stringify(await buildPublicData(corpus, records, out, process.argv.includes("--final"), publicDatasetId)) + "\n"); }
 if (process.argv[1]?.endsWith("build-public-data.ts")) void main().catch((error: unknown) => { process.stderr.write((error instanceof Error ? error.message : "public_data_build_failed") + "\n"); process.exitCode = 1; });

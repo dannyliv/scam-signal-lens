@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { canonicalJson, sha256Web } from "../src/canonical-json.js";
 import { projectModelInput } from "../src/input.js";
 import { evaluateDataset } from "../src/evaluation.js";
-import { derivePolicy, NO, YES } from "../src/policy.js";
+import { derivePolicy, NO, YES, policyFingerprint } from "../src/policy.js";
+import { POLICY_VERSION_ES_EXP, YES_ES_EXP, policyFingerprintEsExp } from "../src/policy-es-exp.js";
 import { buildPassARequest } from "../src/questions.js";
 import { segmentInput } from "../src/segmentation.js";
 import { verifyReplayRecord } from "../src/replay.js";
-import { policyFingerprint } from "../src/policy.js";
 import { validateChoice } from "../src/schema.js";
 
 describe("model input projection", () => {
@@ -128,6 +128,18 @@ describe("evaluation", () => {
   it("does not count unavailable analysis as capture-complete", () => {
     const report = evaluateDataset("fixture", [{ id: "missing", label: "phishing", concern: null, evidenceEligible: 0, evidenceSelected: 0 }]);
     expect(report.coverage.captureComplete.value).toBe(0);
+  });
+});
+
+describe("policy fingerprints", () => {
+  it("keeps policy-v1 at YES 0.8 and policy-v1-es-exp at YES 0.70", async () => {
+    expect(YES).toBe(0.8);
+    expect(YES_ES_EXP).toBe(0.7);
+    expect(POLICY_VERSION_ES_EXP).toBe("policy-v1-es-exp");
+    expect(await sha256Web(policyFingerprint())).toBe("3435135d6058476d4262ecbc936abf95af4993b455dfab35adc8b17f3fe6ad6a");
+    expect(await sha256Web(policyFingerprintEsExp())).toBe("42e51b1f7b8706dae7188d0d3fa8c6ac83b855b21f393196bd63bc16d4b91d93");
+    const input = { channel: "email" as const, subject: null, body: "hello", userContext: "" };
+    expect(await sha256Web(buildPassARequest(input, "es", "source_messages", "en").questions)).toBe("c38d45be636041965e7e231cffdf2831ec083c7780ea13a94086fdf24bf7bc08");
   });
 });
 

@@ -3,6 +3,7 @@ export * from "./canonical-json.js";
 export * from "./evaluation.js";
 export * from "./input.js";
 export * from "./policy.js";
+export * from "./policy-es-exp.js";
 export * from "./questions.js";
 export * from "./replay.js";
 export * from "./schema.js";
