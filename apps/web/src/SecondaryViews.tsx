@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CorpusExample, GeneratedDatasetIndex } from './generated/dataset-index';
 import { isVerifiedExample, type VerifiedExample } from './verified-replay';
-import { policyFingerprint } from '@scam-signal-lens/core';
+import { policyFingerprint, REQUESTED_MODEL } from '@scam-signal-lens/core';
+import { PRODUCT_VERSION } from './version';
 
 export type SecondaryView = 'desk' | 'compare' | 'learn' | 'method' | 'local' | 'sources';
 const pairs = [['S01', 'B01'], ['S02', 'B09'], ['S03', 'B03'], ['S04', 'B04'], ['S07', 'B07'], ['S13', 'B12']];
@@ -62,7 +63,33 @@ export function LearnView({ dataset, examples }: { dataset: GeneratedDatasetInde
   return <section className="secondary learn"><p className="eyebrow">LEARN MODE</p><h2>Read the request before the reveal.</h2><p className="lede">Titles and source labels stay hidden until you make a learning choice. This is not a scored qualification.</p><article className="learn-card"><p className="eyebrow">EMAIL / {current.language === 'es' ? 'SPANISH' : 'ENGLISH'}</p><p className="learn-subject">{current.input.subject ?? 'No subject'}</p><div className="learn-body">{current.input.body}</div>{current.input.userContext && <div className="context"><p>RECIPIENT CONTEXT</p>{current.input.userContext}</div>}{!choice ? <div className="learn-actions"><button onClick={() => setChoice('warning signs')}>Warning signs</button><button onClick={() => setChoice('needs verification')}>Needs verification</button><button onClick={() => setChoice('few warning signs')}>Few warning signs</button></div> : <div className="learn-reveal"><p>You chose: <strong>{choice}</strong></p><p>Title: <strong>{current.title}</strong></p><p>Dataset label: <strong>{current.groundTruth.label}</strong></p><RecordedConcern record={record} /><button onClick={next}>Next email</button></div>}</article></section>;
 }
 
-export function MethodView() { const policy = policyFingerprint(); return <section className="secondary prose"><p className="eyebrow">METHODOLOGY</p><h2>Recorded requests, replayed locally.</h2><p>Each benchmark email is projected into fixed input fields only. Dataset labels, titles, provenance, and authored rationales are excluded from the model request.</p><p>Pass A records the twelve fixed signal and two context-choice answers. Pass B selects literal evidence only from deterministic subject and body segments. The browser verifies the matching public artifact before it reveals a result.</p><p>Policy {policy.policyVersion} marks a signal indicated at {policy.yes}, not indicated at {policy.no}, and uncertain between those thresholds. Context choices require both {policy.choiceConfidenceFloor} confidence and {policy.choiceWinnerProbabilityFloor} winner probability. Rules {policy.strongWarningRules.join(', ')} can produce an alert concern.</p><p>The policy reports a concern state, not a sender verdict. AI Email 200 is authored synthetic material. SpaPhish is an attributed Spanish source sample, and its separate results do not establish English performance. A message alone cannot verify a sender or website.</p></section>; }
+export function MethodView() {
+  const policy = policyFingerprint();
+  return <section id="workspace" className="secondary prose"><p className="eyebrow">METHODOLOGY · {PRODUCT_VERSION}</p><h2>What was recorded, and what it means.</h2>
+    <h3>What the model was given</h3>
+    <p>Each email was sent to the recorded model, {REQUESTED_MODEL}, as four fields only: the channel (email), the subject, the body, and any recipient context. The dataset label, the title, and notes about where the email came from were not part of that request.</p>
+    <p>The first recorded pass asked twelve fixed questions about the text, such as a password request, a payment, urgency, or remote access, plus two context questions: whether the sender is asking the recipient to act, and whether a sensitive action uses a route the recipient already knew or a route introduced in the message. The second pass, when it was used, asked the model to point at a literal subject or body excerpt. It could not add text that was not in the email. The browser checks the matching public recording before it shows a result.</p>
+    <h3>What the decision means</h3>
+    <p>The result is not a verdict that the sender is fraudulent. Policy {policy.policyVersion} reads the recorded answers and reports one concern. A signal counts as indicated at {policy.yes} or above, not indicated at {policy.no} or below, and uncertain in between. A context answer counts only when its confidence is at least {policy.choiceConfidenceFloor} and its winning option is at least {policy.choiceWinnerProbabilityFloor}.</p>
+    <ul>
+      <li><strong>Alert</strong> (strong warning signs) when one of rules {policy.strongWarningRules.join(', ')} matches: a credential request; an advance-fee or refund trap; a payment combined with unusual routing, a bypass, or an unrealistic reward; remote access plus pressure or bypass when the route is not already established; or a sensitive-data request on a sender-supplied route plus pressure or an authority claim.</li>
+      <li><strong>Not enough evidence</strong> when a context answer is too uncertain and the message role or the route is mixed or unknown. An abstention is not a benign result.</li>
+      <li><strong>Verify first</strong> when no alert rule matches but a sensitive signal is uncertain, the text discourages a normal check, or a sensitive action has no established route.</li>
+      <li><strong>Few warning signs</strong> when none of those conditions match. That is not a guarantee the message is safe.</li>
+    </ul>
+    <p>The text alone cannot prove who sent the email or whether a website is safe.</p>
+    <h3>The two corpora</h3>
+    <p><strong>AI Email 200</strong> is 200 English emails written for this project: 100 labeled phishing and 100 labeled benign by the dataset author. Addresses are fictional. It is a teaching set, not a sample of real inboxes.</p>
+    <p><strong>SpaPhish v5</strong> is 499 Spanish emails from <a href="https://data.mendeley.com/datasets/hz2d6gz7pc/5">SpaPhish version 5</a> by Lazaro Bustio-Martinez and listed contributors, shared under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. The public set keeps 250 source benign labels and 249 source phishing labels. One source email, SPAPHISH-088, is left out because its evidence pass was not accepted. Those labels come from the source dataset. They are not a finding by this app. Spanish results do not describe the English corpus, and English results do not describe the Spanish corpus.</p>
+    <h3>This website</h3>
+    <p>The site replays those checked-in recordings. It does not send email text to a model, and it does not create new captures. Precision and recall on the Results tab are the completed recorded benchmark for each corpus.</p>
+    <details>
+      <summary>Private local analysis</summary>
+      <p>The public website cannot evaluate pasted text. A local analysis uploads the selected message text to the hosted provider and needs an owner-supplied credential. Keep private output outside the repository.</p>
+      <pre>pnpm build:recorder{`\n`}node tools/capture/dist/main.js analyze \\{`\n`}  --input-file /absolute/private-input.json \\{`\n`}  --language en --acknowledge-provider-upload true \\{`\n`}  --out /absolute/private-analysis-output --run-id private-review</pre>
+    </details>
+  </section>;
+}
 
 export function LocalView() { return <section className="secondary prose"><p className="eyebrow">RUN LOCALLY</p><h2>Use a private environment for live analysis.</h2><p>The public website cannot evaluate pasted text. A local analysis uploads the selected message text to the hosted provider and needs an owner-supplied credential. Keep private output outside the repository.</p><pre>pnpm build:recorder{`\n`}node tools/capture/dist/main.js analyze \\{`\n`}  --input-file /absolute/private-input.json \\{`\n`}  --language en --acknowledge-provider-upload true \\{`\n`}  --out /absolute/private-analysis-output --run-id private-review</pre><p>Run key-free validation with <code>pnpm test</code>, <code>pnpm typecheck</code>, and <code>pnpm build</code>. Private analyses cannot become public replay records without the project’s separate capture and review process.</p></section>; }
 

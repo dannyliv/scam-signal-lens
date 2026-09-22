@@ -10,8 +10,8 @@ const signalMeaning: Record<string, string> = {
 };
 const ruleMeaning: Record<string, string> = { H1: 'Credential disclosure requested.', H2: 'Advance fee or refund diversion indicated.', H3: 'Payment request combined with unusual routing, bypass, or unrealistic reward.', H4: 'Remote access plus pressure or bypass without an established route.', H5: 'Sensitive data request through a sender-supplied route plus pressure or authority.' };
 
-export function ReplayPanel({ dataset, example, queueEvents, selectedSignalId, onSelectSignal, onEvidenceVisibility }: {
-  dataset: GeneratedDatasetIndex; example: CorpusExample; queueEvents: readonly ReplayEvent[]; selectedSignalId: string | null; onSelectSignal: (signalId: string | null) => void; onEvidenceVisibility: (visible: boolean) => void;
+export function ReplayPanel({ dataset, example, queueEvents, selectedSignalId, onSelectSignal, onEvidenceVisibility, controlledByQueue = false }: {
+  dataset: GeneratedDatasetIndex; example: CorpusExample; queueEvents: readonly ReplayEvent[]; selectedSignalId: string | null; onSelectSignal: (signalId: string | null) => void; onEvidenceVisibility: (visible: boolean) => void; controlledByQueue?: boolean;
 }) {
   const [record, setRecord] = useState<VerifiedExample | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export function ReplayPanel({ dataset, example, queueEvents, selectedSignalId, o
   }, [dataset, example, onSelectSignal]);
   const events = record?.events ?? [];
   const queueForExample = useMemo(() => queueEvents.filter((event) => event.exampleId === example.id), [queueEvents, example.id]);
-  const queueMode = queueEvents.length > 0;
+  const queueMode = controlledByQueue || queueEvents.length > 0;
   const revealed = queueMode ? queueForExample : events.slice(0, cursor);
   const anchors = record?.replayAnchors;
   const stage = useMemo(() => anchors ? revealStage(revealed, anchors) : { passA: false, evidence: false, complete: false }, [revealed, anchors]);
@@ -54,7 +54,7 @@ export function ReplayPanel({ dataset, example, queueEvents, selectedSignalId, o
 
   return <div className="replay"><p className="eyebrow">CONDENSED PLAYBACK</p><p className="replay-note">Recorded request timings are shown separately. Playback speed is not inference speed.</p>
     {queueMode ? <p className="queue">Queue replay controls the recorded event prefix for this message.</p> : <div className="replay-controls"><button onClick={() => setPlaying((value) => !value)}>{playing ? 'Pause' : cursor ? 'Resume' : 'Replay recorded benchmark'}</button><button onClick={() => setCursor((value) => Math.min(value + 1, events.length))}>Step</button><button onClick={() => { setCursor(events.length); setPlaying(false); }}>Instant completion</button><button onClick={() => { setCursor(0); setPlaying(false); onSelectSignal(null); }}>Restart</button></div>}
-    <p className="queue">Results revealed so far: {revealed.length} / {events.length} recorded events for this message</p>
+    <p className="queue">Playback: {revealed.length} of {events.length} recorded events for this email.</p>
     {latest && <div className="event"><strong>{latest.kind.replaceAll('_', ' ')}</strong><span>{latest.pass ? `Pass ${latest.pass}` : 'Run event'}{latest.elapsedMs !== undefined ? ` · ${latest.elapsedMs} ms` : ''}</span></div>}
     {stage.passA && <section className="analysis-detail"><p className="eyebrow">RECORDED SIGNAL PRESENCE</p><p className="replay-note">Values describe signal presence. They are not a scam percentage.</p><div className="signal-list">{signalAnswers.map(([id, answer]) => { const status = signalStatus(answer.noul).replaceAll('_', ' '); return <button key={id} className={selectedSignalId === id ? 'signal active-signal' : 'signal'} onClick={() => onSelectSignal(selectedSignalId === id ? null : id)}><span><strong>{humanConcern(id)}</strong><small>{status} · {signalMeaning[id] ?? 'This recorded signal is considered with the rest of the message.'}</small></span><b>{answer.noul.toFixed(2)}</b></button>; })}</div>
       {contextAnswers.length > 0 && <div className="choices"><p className="eyebrow">CONTEXT CHOICES</p>{contextAnswers.map(([id, answer]) => <div key={id}><strong>{humanConcern(id)}: {humanConcern(answer.choice)}</strong><span> confidence {answer.confidence.toFixed(2)}</span><ul>{Object.entries(answer.probabilities).map(([choice, probability]) => <li key={choice}>{humanConcern(choice)} {probability.toFixed(2)}</li>)}</ul></div>)}</div>}
