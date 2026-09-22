@@ -67,7 +67,50 @@ Assign `TYPESAFE_API_KEY` in that shell before the export, or let an owner crede
 
 `--out` is an absolute directory outside this repository. The recorder rejects a path inside the repository.
 
-The command above smokes one row of the bundled English corpus. `record` walks that file, and the same flags accept `data/corpora/spaphish-v5.json`. For other data, point `--dataset` at a corpus JSON that passes `validateCorpusEnvelope` in `packages/core/src/schema.ts` (mirror `data/corpora/ai-email-200-v1.json`), or use `analyze` with `--input-file` and `--acknowledge-provider-upload true` for one input accepted by `projectModelInput` in `packages/core/src/input.ts`. Those commands upload the selected text. The requested model is `jev-1.13.0`. [Setup](docs/SETUP.md) and [recording](docs/RECORDING.md) cover `record`, `analyze`, local evaluation, and public export. Public export accepts a complete verified capture of an allowlisted frozen corpus only. It does not publish `analyze` output or a corpus you author, and it does not call the provider.
+The command above smokes one row of the bundled English corpus. `record` uses the same flags on that file or on `data/corpora/spaphish-v5.json`. See [Use your own API key](#use-your-own-api-key), [Use your own data](#use-your-own-data), and [Tune policy, thresholds, and questions](#tune-policy-thresholds-and-questions). [Setup](docs/SETUP.md) and [recording](docs/RECORDING.md) have the full commands. Public export accepts a complete verified capture of an allowlisted frozen corpus only. It does not publish `analyze` output or a corpus you author, and it does not call the provider.
+
+## Use your own API key
+
+The Node recorder in `tools/capture` reads `process.env.TYPESAFE_API_KEY` for that process. Assign it in the shell before the `export` in the quick start, or let an owner credential facility place it in that shell, then `unset TYPESAFE_API_KEY`. Never commit a key. Commands and key rules: [setup](docs/SETUP.md), [recording](docs/RECORDING.md), [security](docs/SECURITY.md).
+
+GitHub Pages replays the committed recordings. It has no key field and does not call the provider.
+
+## Use your own data
+
+`smoke` and `record --dataset` load a corpus through `validateCorpusEnvelope` in [`packages/core/src/schema.ts`](packages/core/src/schema.ts). Mirror [`data/corpora/ai-email-200-v1.json`](data/corpora/ai-email-200-v1.json). `analyze --input-file` is one message. [`tools/capture/src/main.ts`](tools/capture/src/main.ts) calls `projectModelInput({ input: raw })`, so the file is the inner object:
+
+```json
+{ "channel": "email", "subject": "Enrollment window reminder", "body": "The benefits portal is open through Friday.", "userContext": "" }
+```
+
+`--language` is `en` or `es`, and `--acknowledge-provider-upload true` is required. The journal dataset id is `private-input-v1`. Corpus rows must use `channel` `"email"`. `projectModelInput` also allows `sms`, `chat`, and `social_dm` on that one-message file. Limits in [`packages/core/src/input.ts`](packages/core/src/input.ts) are UTF-16 code units: body 8000, subject 300, `userContext` 2000.
+
+[Setup](docs/SETUP.md) and [recording](docs/RECORDING.md) have the commands. `pnpm evaluate` and `pnpm build:public-data -- … --final` accept frozen capture sources only. Your file and an `analyze` journal stay private. Pages stays the recorded replay.
+
+## Tune policy, thresholds, and questions
+
+Policy, thresholds, questions, the model, input limits, the endpoint, the attempt cap, and segmentation are not CLI flags. The recorder does not read a model flag. `record` does accept `--recover-from` and, with it, `--changed-example`; those flags are in [recording](docs/RECORDING.md) and do not retune policy. A parent whose policy hash, question-bundle hash, model, segmentation, or attempt cap differs raises `recovery_inference_config_mismatch`.
+
+A source edit needs `pnpm build:recorder` (that runs `pnpm build:core`, then compiles the recorder) and a new absolute `--out` plus a new `--run-id`. Reusing an output directory raises `existing capture run configuration is immutable` when the policy hash, question-bundle hash, model, segmentation version, attempt cap, dataset, recovery lineage, or source-content hash differs.
+
+| Param | Module | Affects | Rebuild / recapture |
+| --- | --- | --- | --- |
+| `YES` 0.8, `NO` 0.2 | [`packages/core/src/policy.ts`](packages/core/src/policy.ts) | `signalStatus`: at or above `YES` indicated, at or below `NO` not indicated, strictly between them uncertain | Source edit. New `--out` and `--run-id`. `policySha256` changes even if `POLICY_VERSION` stays `policy-v1`. |
+| `CHOICE_CONFIDENCE_FLOOR` 0.65, `CHOICE_WINNER_PROBABILITY_FLOOR` 0.7 | `policy.ts` | A contextual choice counts only when confidence and winner probability both clear the floors | Same as `YES` / `NO` |
+| H1–H5 in `derivePolicy` | `policy.ts` | Any match is alert `strong_warning_signs`. H1: `credential_request`. H2: `advance_fee_or_refund_trap`. H3: `payment_request` plus `unusual_payment_routing`, `verification_bypass`, or `unrealistic_reward`. H4: `remote_access_request` plus `urgency_pressure` or `verification_bypass`, unless the route is `independently_established` at both floors. H5: `sensitive_data_request` on `sender_supplied` at both floors plus `urgency_pressure` or `authority_claim`. | Same as `YES` / `NO` |
+| `POLICY_VERSION` `policy-v1` | `policyFingerprint()` in `policy.ts` | Bound with the numbers and rule ids `H1`–`H5` into `policySha256` | Same as `YES` / `NO` |
+| `signalDefinitions`, Pass A/B | [`packages/core/src/questions.ts`](packages/core/src/questions.ts) | Twelve Noul signals plus `message_role` and `request_route`. Pass B when a signal is above `NO`, unless subject or body has more than 64 segments (`candidate_limit`). Scope `synthetic_sanitized` only for dataset id `ai-email-200-v1`; otherwise `source_messages`, including `analyze`. Question-bundle hash is the Pass A `questions` object and omits message text. | Source edit. New run. Question-bundle hash changes. |
+| `REQUESTED_MODEL` `jev-1.13.0` | `questions.ts`, and the same literal in [`tools/capture/src/main.ts`](tools/capture/src/main.ts) (analyze manifest, recovery config, smoke/record config) | Model on the request and the run. Response `model` must match. Keep the copies equal. | Source edit. New run. No model flag. |
+| `INPUT_LIMITS`, channels | [`packages/core/src/input.ts`](packages/core/src/input.ts) | Limits and channels in [Use your own data](#use-your-own-data) | Changing the constants is a source edit and a new run. Your file is data only. |
+| Corpus envelope | `validateCorpusEnvelope` in [`packages/core/src/schema.ts`](packages/core/src/schema.ts) | `version` `"1.0.0"`, object `metadata`, `examples` with unique `id`, language `en` or `es`, email `input`, `groundTruth.label` `phishing` or `benign`, `labelSource` `synthetic_author` or `source_dataset`. Example: [`data/corpora/ai-email-200-v1.json`](data/corpora/ai-email-200-v1.json). | New `--dataset` file. Schema changes are a source edit. |
+| `TYPESAFE_API_KEY` | `process.env` in `tools/capture/src/main.ts` | Auth for that capture process. Missing key throws `TYPESAFE_API_KEY is required by the private capture process`. | Shell or owner credential facility, then unset. Not a source edit. |
+| `TYPESAFE_SYSTEMONE_ENDPOINT` | [`tools/capture/src/typesafe-http.ts`](tools/capture/src/typesafe-http.ts) | `https://api.typesafe.ai/v1/systemone` | Source edit. No endpoint flag. New run. |
+| `declaredAttemptCap` | [`tools/capture/src/record.ts`](tools/capture/src/record.ts) | Run cap `eligibleRows * 2 * 3`. `analyze` uses one row, so the cap is 6. Stored as `declaredHttpAttemptCap`. | Source edit. No cap flag. New run. |
+| `SEGMENTATION_VERSION` `intl-segmenter-sentence-v1` | [`packages/core/src/segmentation.ts`](packages/core/src/segmentation.ts) | `segmentInput` uses `Intl.Segmenter` for the example language | Source edit. New run. |
+
+If no H rule matches, a role or route below a choice floor whose winner is `mixed_or_unclear` or `mixed_or_unknown` is `not_enough_evidence`. `verify_first` covers an uncertain review signal (`credential_request`, `sensitive_data_request`, `unusual_payment_routing`, `verification_bypass`, `advance_fee_or_refund_trap`, `analyzer_instruction`), an indicated `verification_bypass` or `analyzer_instruction`, an indicated `payment_request`, `sensitive_data_request`, or `remote_access_request` that is not independently established at both floors, or a role or route below a floor. Otherwise the concern is `few_warning_signs`. The eval alert is `strong_warning_signs`. See [evaluation](docs/EVALUATION.md).
+
+Checked-in replays stay on frozen `policy-v1`. `verifyReplayRecord` in [`packages/core/src/replay.ts`](packages/core/src/replay.ts) checks the running core's policy hash, question-bundle hash, segmentation version, and model, so `pnpm recording:verify` rejects those replays after one of those bindings moves. Pages keeps the deployed replay.
 
 ## Scope
 

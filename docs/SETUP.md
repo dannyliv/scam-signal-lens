@@ -72,4 +72,6 @@ pnpm build:public-data -- \
 
 The command rejects a partial run, `analyze` output, a corpus that is not an allowlisted frozen corpus, a failed evidence pass, an unexpected record, a duplicate ID, or a mismatched corpus or configuration hash. Run it separately for each frozen corpus after review. It does not call the provider. There is no other public export path.
 
+Thresholds, questions, and the other source constants are listed in [Tune policy, thresholds, and questions](../README.md#tune-policy-thresholds-and-questions). Changing one of them means `pnpm build:recorder` and a new private `--out` directory and `--run-id`.
+
 After the 200-row AI Email corpus and the authorized 499-row SpaPhish public projection are exported, run `pnpm recording:verify` to load and verify every generated replay, then `pnpm build:demo`. Run `pnpm check:release` only from the clean public publication staging tree, where its redacted history scan can succeed.
