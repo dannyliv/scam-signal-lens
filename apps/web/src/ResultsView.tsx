@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { datasets, type GeneratedDatasetIndex } from './generated/dataset-index';
-import { chartSeries, completedMetricRows, formatRecordedRatio, readConcernCounts, readConfusion, readDisagreements, recordedBarPercent, recordedCaptureLines, type ConcernCounts } from './recorded-metrics';
+import { chartSeries, completedMetricRows, formatRecordedRatio, readConcernCounts, readConfusion, recordedBarPercent, recordedCaptureLines, type ConcernCounts } from './recorded-metrics';
 import { isVerifiedRun, type VerifiedRun } from './verified-replay';
 import { PRODUCT_VERSION } from './version';
 
@@ -16,7 +16,6 @@ function CorpusResult({ dataset, run }: { dataset: GeneratedDatasetIndex; run: V
   const evaluation = run?.evaluation ?? null;
   const series = chartSeries(evaluation);
   const confusion = readConfusion(evaluation);
-  const disagreements = readDisagreements(evaluation);
   return <article className="result-card">
     <h3>{dataset.name}</h3>
     <p className="lang">{dataset.language} · {dataset.sampleNote}</p>
@@ -48,8 +47,6 @@ function CorpusResult({ dataset, run }: { dataset: GeneratedDatasetIndex; run: V
             <ConcernRow label="benign" counts={readConcernCounts(evaluation, 'benign')} />
           </tbody>
         </table>
-        <p className="queue">Recorded disagreements</p>
-        {disagreements === null ? <p className="queue">Not in recorded set.</p> : disagreements.length === 0 ? <p className="queue">None in this recorded set.</p> : <ul className="disagreements">{disagreements.map((row) => <li key={row.id}>{row.id}: dataset {row.label}, application concern {row.concern.replaceAll('_', ' ')}</li>)}</ul>}
         {recordedCaptureLines(run?.manifest ?? null, run?.rows.length ?? null).map((line) => <p className="queue" key={line}>{line}</p>)}
       </div>
     </details>

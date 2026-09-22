@@ -101,18 +101,6 @@ export function readConcernCounts(evaluation: unknown, label: 'phishing' | 'beni
   return counts;
 }
 
-export function readDisagreements(evaluation: unknown): { id: string; label: string; concern: string }[] | null {
-  if (!isRecord(evaluation) || !Array.isArray(evaluation.individualErrors)) return null;
-  const rows: { id: string; label: string; concern: string }[] = [];
-  for (const item of evaluation.individualErrors) {
-    if (!isRecord(item) || typeof item.id !== 'string' || typeof item.label !== 'string') return null;
-    const concern = item.concern === null ? 'unavailable' : item.concern;
-    if (typeof concern !== 'string') return null;
-    rows.push({ id: item.id, label: item.label, concern });
-  }
-  return rows;
-}
-
 export function recordedCaptureLines(manifest: unknown, publicRows: number | null): string[] {
   if (!isRecord(manifest)) return ['Capture effort is not in the recorded set.'];
   const source = isRecord(manifest.sourceRun) ? manifest.sourceRun : manifest;
